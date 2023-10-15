@@ -9,7 +9,7 @@
 #include "freertos/semphr.h"
 #include "esp_log.h"
 
-#include "cpp/hsm.hpp"
+#include "hsm.hpp"
 #include "sensors.h"
 
 using namespace std;
