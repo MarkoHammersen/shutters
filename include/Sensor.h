@@ -1,25 +1,28 @@
 #pragma once
 
+#include "MCP23017.h"
+
 class Sensor
 {
 protected:
-    string up, down, device;
+    MCP23017Name _name;
+    MCP23017Pin::Names _up;
+    MCP23017Pin::Names _down;
 
 public:
     Sensor(){};
-    Sensor(string device, string up, string down)
+    Sensor(MCP23017Name name, MCP23017Pin::Names up, MCP23017Pin::Names down)
     {
-        up = up;
-        down = down;
+        _name = name;
+        _up = up;
+        _down = down;
     }
-    string getUp()
+    MCP23017Pin::Names getUp()
     {
-        return up;
+        return _up;
     }
-    string getDown()
+    MCP23017Pin::Names getDown()
     {
-        return down;
+        return _down;
     }
 };
-
-void initializeSensors();

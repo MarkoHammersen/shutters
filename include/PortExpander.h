@@ -25,6 +25,7 @@ public:
 
     void switchOff(string pinName);
     void switchOn(string pinName);
+    string getName();
 };
 
 int PortExpander::findPin(string pinName)
@@ -100,10 +101,8 @@ PortExpander::PortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp)
     mcp = mcp;
 }
 
-PortExpander::PortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp, uint8_t intPinA, , uint8_t intPinB)
+PortExpander::PortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp)
 {
-    Wire.begin(I2C_SDA, I2C_SCL, I2C_FRQ);
-
     if (PORT_EXPANDER_TYPE::SENSOR == type)
     {
         mcp.init();
@@ -121,12 +120,15 @@ PortExpander::PortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp, 
         mcp.writeRegister(MCP23017Register::GPIO_B, 0x00);
 
         mcp.clearInterrupts();
+    }
+    else if (PORT_EXPANDER_TYPE::ACTUATOR == type)
+    {
+        mcp.init();
+        mcp.portMode(MCP23017Port::A, 0); // Port A as output
+        mcp.portMode(MCP23017Port::B, 0); // Port B as output
 
-        pinMode(intPinA, INPUT_PULLUP);
-        pinMode(intPinB, INPUT_PULLUP);
-
-        attachInterrupt(digitalPinToInterrupt(intPinA), userInputA, FALLING);
-        attachInterrupt(digitalPinToInterrupt(intPinB), userInputB, FALLING);
+        mcp.writeRegister(MCP23017Register::GPIO_A, 0x00); // Reset port A
+        mcp.writeRegister(MCP23017Register::GPIO_B, 0x00); // Reset port B
     }
     else
     {
@@ -139,4 +141,9 @@ PortExpander::PortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp, 
 
 PortExpander::~PortExpander()
 {
+}
+
+string PortExpander::getName()
+{
+    return name;
 }
