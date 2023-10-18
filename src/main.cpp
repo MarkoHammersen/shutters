@@ -153,6 +153,7 @@ uint8_t sensorGetSinglePinEvent(uint32_t i2cAddr, MCP23017Pin::Names pin)
   }
 
   assert(false); // never get here, due to invalid i2c address
+  return 0;
 }
 
 void actuatorCmd(uint32_t i2cAddr, MCP23017Pin::Names pin, uint8_t state)
