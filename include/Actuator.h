@@ -25,12 +25,12 @@ protected:
         {
         case 'a':
         case 'A':
-            return (MCP23017Pin::GPA0 + pin);
-
+            return (MCP23017Pin::Names::GPA0 + pin);
             break;
+            
         case 'b':
         case 'B':
-            return (MCP23017Pin::GPB0 + pin);
+            return (MCP23017Pin::Names::GPB0 + pin);
             break;
 
         default:

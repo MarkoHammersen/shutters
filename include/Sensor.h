@@ -25,4 +25,8 @@ public:
     {
         return _down;
     }
+    MCP23017Name getMcp23017Name()
+    {
+        return _name;
+    }
 };

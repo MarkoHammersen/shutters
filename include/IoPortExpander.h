@@ -3,16 +3,8 @@
 #include "MCP23017.h"
 #include "Wire.h"
 
-struct PORT_EXPANDER_TYPE
-{
-    enum Names
-    {
-        SENSOR,
-        ACTUATOR
-    };
-};
 
-class PortExpander
+class IoPortExpander
 {
 private:
     string name;
@@ -20,15 +12,15 @@ private:
     int findPin(string pinName);
 
 public:
-    PortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 mcp);
-    ~PortExpander();
+    IoPortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 mcp);
+    ~IoPortExpander();
 
     void switchOff(string pinName);
     void switchOn(string pinName);
     string getName();
 };
 
-int PortExpander::findPin(string pinName)
+int IoPortExpander::findPin(string pinName)
 {
     // pinName must be of format "A0" to "A7" or "B0" to "B7"
     if (pinName.length() != 2)
@@ -59,7 +51,7 @@ int PortExpander::findPin(string pinName)
     return -1;
 }
 
-void PortExpander::switchOn(string pinName)
+void IoPortExpander::switchOn(string pinName)
 {
     int pin = findPin(pinName);
     if (pin < 0)
@@ -69,7 +61,7 @@ void PortExpander::switchOn(string pinName)
     mcp.digitalWrite(pin, HIGH);
 }
 
-void PortExpander::switchOff(string pinName)
+void IoPortExpander::switchOff(string pinName)
 {
     int pin = findPin(pinName);
     if (pin < 0)
@@ -79,7 +71,7 @@ void PortExpander::switchOff(string pinName)
     mcp.digitalWrite(pin, LOW);
 }
 
-PortExpander::PortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp)
+IoPortExpander::IoPortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp)
 {
     Wire.begin(I2C_SDA, I2C_SCL, I2C_FRQ);
 
@@ -101,7 +93,7 @@ PortExpander::PortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp)
     mcp = mcp;
 }
 
-PortExpander::PortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp)
+IoPortExpander::IoPortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp)
 {
     if (PORT_EXPANDER_TYPE::SENSOR == type)
     {
@@ -139,11 +131,11 @@ PortExpander::PortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp)
     mcp = mcp;
 }
 
-PortExpander::~PortExpander()
+IoPortExpander::~IoPortExpander()
 {
 }
 
-string PortExpander::getName()
+string IoPortExpander::getName()
 {
     return name;
 }

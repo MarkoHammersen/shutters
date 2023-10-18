@@ -37,10 +37,9 @@ typedef enum
 
 typedef enum HsmEvents
 {
-  SHUTTER_UP_EVT,
-  SHUTTER_DOWN_EVT,
-  SHUTTER_IDLE_EVT,
-  SHUTTER_TIMEOUT_EVT
+  SENSOR_UP_EVT,
+  SENSOR_DOWN_EVT,
+  TIMEOUT_EVT
 } hsmEvent_t;
 
 static void sendMsgFromInt(sensorEvent_t &msg);
@@ -105,10 +104,14 @@ Büro	    U1	        A7	A6	    A	            U37	        B6	B5
 static bool interrupt = false;
 static MCP23017 mcpU36 = MCP23017(MCP23017_U36_ADDR);
 static MCP23017 mcpU18 = MCP23017(MCP23017_U18_ADDR);
+static vector<MCP23017> = sensors ={
+  MCP23017(I2C_ADDR_SENSOR_U18),
+  MCP23017(I2C_ADDR_SENSOR_U35)
+}
 
 static vector<Shutter> shutters =
     {
-        Shutter("Lina", "Ost", Sensor(MCP23017Name::U18, MCP23017Pin::GPB0, MCP23017Pin::GPB1), Actuator(&mcpU36, "B0", "B1")),
+        Shutter("Lina", "Ost", Sensor(MCP23017Name::U18, MCP23017Pin::GPB0, MCP23017Pin::GPB1), Actuator(&mcpU36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
         // Shutter("Lina", "Sued",     Sensor(Port("U36",  "B2"), Port("U36",  "B3")), Actuator(Port("U4",  "A4"), Port("A4", "A3"))),
         // Shutter("Flur", "Sued",     Sensor(Port("U36",  "B4"), Port("U36",  "B5")), Actuator(Port("U4",  "A2"), Port("A2", "A1"))),
         // Shutter("Waesche", "Sued",  Sensor(Port("U36",  "B6"), Port("U36",  "B7")), Actuator(Port("U4",  "A0"), Port("A0", "B6"))),
@@ -120,12 +123,6 @@ static vector<Shutter> shutters =
         // Shutter("Paul", "Ost",      Sensor(Port("U1",   "B6"), Port("U1",   "B7")), Actuator(Port("U37", "B1"), Port("A2", "A1"))),
         // Shutter("Buero", "Ost",     Sensor(Port("U1",   "A7"), Port("U1",   "A6")), Actuator(Port("U37", "B1"), Port("B6", "B5")))
 };
-
-const Msg shutterMsg[] = {
-    (Event)SHUTTER_UP_EVT,
-    (Event)SHUTTER_DOWN_EVT,
-    (Event)SHUTTER_IDLE_EVT,
-    (Event)SHUTTER_TIMEOUT_EVT};
 
 static void sendMsgFromInt(sensorEvent_t &msg)
 {
@@ -298,10 +295,10 @@ Shutter::Shutter(string room,
                  Actuator actuator)
     : Hsm("shutter", (EvtHndlr)&Shutter::topHndlr),
       idle("idle", &top, (EvtHndlr)&Shutter::idleHndlr),
-      up("up", &up, (EvtHndlr)&Shutter::upHndlr),
-      down("down", &down, (EvtHndlr)&Shutter::downHndlr),
-      stop("stop", &stop, (EvtHndlr)&Shutter::stopHndlr),
-      running("running", &running, (EvtHndlr)&Shutter::runningHndlr)
+      up("up", &top, (EvtHndlr)&Shutter::upHndlr),
+      down("down", &top, (EvtHndlr)&Shutter::downHndlr),
+      stop("stop", &top, (EvtHndlr)&Shutter::stopHndlr),
+      running("running", &top, (EvtHndlr)&Shutter::runningHndlr)
 {
   room = room;
   dir = dir;
@@ -419,6 +416,38 @@ void setup()
   }
 }
 
+void processSensorEvent(MCP23017Name mcpName, MCP23017Port portNumber, uint8_t portValue)
+{
+  int offset = (MCP23017Port::A == portNumber)  ? MCP23017Pin::GPA0 : MCP23017Pin::GPB0;
+  for (int i = 0; i < 8; i++)
+    {
+      if ((portValue & (1u << i)) > 0)
+      {
+        for (Shutter s : shutters)
+        {
+          if(mcpName != s.sensor.getMcp23017Name())
+          {
+            continue;
+          }
+        
+          if (s.sensor.getUp() == static_cast<MCP23017Pin::Names>(i) + offset)
+          {
+            struct Msg msg = {SENSOR_UP_EVT};
+            s.onEvent(&msg);
+          }
+          else if (s.sensor.getDown() == static_cast<MCP23017Pin::Names>(i) + offset)
+          {
+            struct Msg msg = {SENSOR_DOWN_EVT};
+            s.onEvent(&msg);
+          }
+          else
+          {
+          }
+        }
+      }
+    }
+}
+
 void loop()
 {
   // do nothing here, as software runs in dedicated tasks
@@ -435,55 +464,9 @@ void loop()
     interrupt = false;
     interrupts();
 
-    struct Msg msg;
-    for (int i = 0; i < 8; i++)
-    {
-      if ((u18PortA & (1u << i)) > 0)
-      {
-        for (Shutter s : shutters)
-        {
-          if (s.sensor.getUp() == static_cast<MCP23017Pin::Names>(i))
-          {
-            msg.evt = SHUTTER_UP_EVT;
-            s.onEvent(&msg);
-          }
-
-          else if (s.sensor.getDown() == static_cast<MCP23017Pin::Names>(i))
-          {
-            msg.evt = SHUTTER_DOWN_EVT;
-            s.onEvent(&msg);
-          }
-
-          else
-          {
-          }
-        }
-      }
-    }
-
-    for (int i = 0; i < 8; i++)
-    {
-      if ((u18PortB & (1u << i)) > 0)
-      {
-        for (Shutter s : shutters)
-        {
-          if (s.sensor.getUp() == static_cast<MCP23017Pin::Names>(i) + MCP23017Pin::GPB0)
-          {
-            msg.evt = SHUTTER_UP_EVT;
-            s.onEvent(&msg);
-          }
-
-          else if (s.sensor.getDown() == static_cast<MCP23017Pin::Names>(i) + MCP23017Pin::GPB0)
-          {
-            msg.evt = SHUTTER_DOWN_EVT;
-            s.onEvent(&msg);
-          }
-
-          else
-          {
-          }
-        }
-      }
-    }
+    processSensorEvent(MCP23017Name::U18, MCP23017Port::A,  u18PortA);
+    processSensorEvent(MCP23017Name::U18, MCP23017Port::B,  u18PortB);
+    processSensorEvent(MCP23017Name::U36, MCP23017Port::A,  u36PortA);
+    processSensorEvent(MCP23017Name::U36, MCP23017Port::B,  u36PortB);
   }
 }
