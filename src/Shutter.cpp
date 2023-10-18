@@ -7,9 +7,11 @@ typedef enum HsmEvents
     TIMEOUT_EVT
 } hsmEvent_t;
 
+using namespace std;
+#define TAG "shutter"
+
 extern void actuatorCmd(uint32_t i2cAddr, MCP23017Pin::Names pin, uint8_t state);
 extern uint8_t sensorGetSinglePinEvent(uint32_t i2cAddr, MCP23017Pin::Names pin);
-extern void shutterTimeout();
 
 static bool _timeoutDebounce(void *arg)
 {

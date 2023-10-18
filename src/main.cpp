@@ -1,3 +1,6 @@
+#ifdef UNIT_TEST
+#include "gtest/gtest.h"
+#endif
 #include <Arduino.h>
 #include <stdio.h>
 #include <assert.h>
@@ -5,9 +8,6 @@
 #include <string>
 #include <vector>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
 #include "esp_log.h"
 
 #include "hsm.hpp"
@@ -15,10 +15,6 @@
 #include "Sensor.h"
 #include "IoPortExpander.h"
 #include "Shutter.h"
-
-
-using namespace std;
-#define TAG "shutter"
 
 static void sensorInterrupt();
 

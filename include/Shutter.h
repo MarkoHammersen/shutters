@@ -5,9 +5,11 @@
 using namespace std;
 
 #include <arduino-timer.h>
+#include <assert.h>
 #include "hsm.hpp"
 #include "Sensor.h"
 #include "Actuator.h"
+#include "esp_log.h"
 
 class Shutter : private Hsm
 {
