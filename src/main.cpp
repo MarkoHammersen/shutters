@@ -10,80 +10,18 @@
 #include "freertos/semphr.h"
 #include "esp_log.h"
 
+#include "DeviceNames.h"
 #include "hsm.hpp"
-
-using namespace std;
-enum class MCP23017Name : uint8_t
-{
-  U18,
-  U35,
-  U36,
-  U37
-};
-
 #include "Actuator.h"
 #include "Sensor.h"
+#include "IoPortExpander.h"
+#include "Shutter.h"
 
 using namespace std;
 #define TAG "shutter"
 
-typedef enum
-{
-  SENSOR_INT_U18_A,
-  SENSOR_INT_U18_B,
-  SENSOR_INT_U35_A,
-  SENSOR_INT_U35_B
-} sensorEvent_t;
-
-typedef enum HsmEvents
-{
-  SENSOR_UP_EVT,
-  SENSOR_DOWN_EVT,
-  TIMEOUT_EVT
-} hsmEvent_t;
-
-static void sendMsgFromInt(sensorEvent_t &msg);
-static void sensorIntU18A();
-static void sensorIntU18B();
-static void sensorIntU35A();
-static void sensorIntU35B();
-
-class Shutter : public Hsm
-{
-protected:
-  string room;
-  string dir;
-
-  State top;
-  State idle;
-  State stop;
-  State running;
-  State up;
-  State down;
-
-  uint32_t timeout;
-  uint32_t tRunning;
-  uint32_t tDebounce;
-  uint32_t tStopDebounce;
-
-public:
-  Sensor sensor;
-  Actuator actuator;
-  Shutter(string room, string dir, Sensor s, Actuator a);
-  Msg const *topHndlr(Msg const *msg);
-  Msg const *idleHndlr(Msg const *msg);
-  Msg const *stopHndlr(Msg const *msg);
-  Msg const *runningHndlr(Msg const *msg);
-  Msg const *upHndlr(Msg const *msg);
-  Msg const *downHndlr(Msg const *msg);
-};
-
-static TaskHandle_t taskHandleModel = NULL;
-static TaskHandle_t taskHandleSensor = NULL;
-static TaskHandle_t taskHandleActuator = NULL;
-static QueueHandle_t qHandleModel = NULL;
-static QueueHandle_t qHandleSensor = NULL;
-static QueueHandle_t qHandleActuator = NULL;
+static void sensorInterrupt();
+static void processSensorEvent(MCP23017Name mcpName, MCP23017Port portNumber, uint8_t portValue);
 
 /*
 Name	    Input				                    Output
@@ -102,16 +40,18 @@ Büro	    U1	        A7	A6	    A	            U37	        B6	B5
 */
 
 static bool interrupt = false;
-static MCP23017 mcpU36 = MCP23017(MCP23017_U36_ADDR);
-static MCP23017 mcpU18 = MCP23017(MCP23017_U18_ADDR);
-static vector<MCP23017> = sensors ={
-  MCP23017(I2C_ADDR_SENSOR_U18),
-  MCP23017(I2C_ADDR_SENSOR_U35)
-}
+static vector<IoPortExpander> sensorIoPortExp ={
+  IoPortExpander(MCP23017Name::U18, MCP23017(I2C_ADDR_SENSOR_U18)),
+  IoPortExpander(MCP23017Name::U35, MCP23017(I2C_ADDR_SENSOR_U35))
+};
+static vector<IoPortExpander> actuatorIoPortExp ={
+  IoPortExpander(MCP23017Name::U36, MCP23017(I2C_ADDR_ACTUATOR_U36)),
+  IoPortExpander(MCP23017Name::U37, MCP23017(I2C_ADDR_ACTUATOR_U37))
+};
 
 static vector<Shutter> shutters =
     {
-        Shutter("Lina", "Ost", Sensor(MCP23017Name::U18, MCP23017Pin::GPB0, MCP23017Pin::GPB1), Actuator(&mcpU36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+        Shutter("Lina", "Ost", Sensor(MCP23017Name::U18, MCP23017Pin::GPB0, MCP23017Pin::GPB1), Actuator(MCP23017Name::U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
         // Shutter("Lina", "Sued",     Sensor(Port("U36",  "B2"), Port("U36",  "B3")), Actuator(Port("U4",  "A4"), Port("A4", "A3"))),
         // Shutter("Flur", "Sued",     Sensor(Port("U36",  "B4"), Port("U36",  "B5")), Actuator(Port("U4",  "A2"), Port("A2", "A1"))),
         // Shutter("Waesche", "Sued",  Sensor(Port("U36",  "B6"), Port("U36",  "B7")), Actuator(Port("U4",  "A0"), Port("A0", "B6"))),
@@ -124,299 +64,12 @@ static vector<Shutter> shutters =
         // Shutter("Buero", "Ost",     Sensor(Port("U1",   "A7"), Port("U1",   "A6")), Actuator(Port("U37", "B1"), Port("B6", "B5")))
 };
 
-static void sendMsgFromInt(sensorEvent_t &msg)
+static void sensorInterrupt()
 {
-  BaseType_t xHigherPriorityTaskWoken;
-  xHigherPriorityTaskWoken = pdFALSE;
-  xQueueSendFromISR(qHandleModel, &msg, &xHigherPriorityTaskWoken);
-  if (xHigherPriorityTaskWoken)
-  {
-    portYIELD_FROM_ISR();
-  }
-}
-
-static void sensorIntU18A()
-{
-  // sensorEvent_t msg = SENSOR_INT_U18_A;
-  // sendMsgFromInt(msg);
   interrupt = true;
 }
 
-static void sensorIntU18B()
-{
-  // sensorEvent_t msg = SENSOR_INT_U18_B;
-  // sendMsgFromInt(msg);
-  interrupt = true;
-}
-
-static void sensorIntU35A()
-{
-  // sensorEvent_t msg = SENSOR_INT_U35_A;
-  // sendMsgFromInt(msg);
-  interrupt = true;
-}
-
-static void sensorIntU35B()
-{
-  // sensorEvent_t msg = SENSOR_INT_U35_B;
-  // sendMsgFromInt(msg);
-  interrupt = true;
-}
-
-Msg const *Shutter::downHndlr(Msg const *msg)
-{
-  switch (msg->evt)
-  {
-  case START_EVT:
-    ESP_LOGI(TAG, "down-INIT\n");
-    return 0;
-
-  case ENTRY_EVT:
-    ESP_LOGI(TAG, "down-ENTRY\n");
-    actuator.switchOff(actuator.getUp());
-    actuator.switchOn(actuator.getDown());
-    return 0;
-
-  case EXIT_EVT:
-    ESP_LOGI(TAG, "down-EXIT\n");
-    return 0;
-
-  default:
-    return 0;
-  }
-  return msg;
-}
-
-Msg const *Shutter::stopHndlr(Msg const *msg)
-{
-  switch (msg->evt)
-  {
-  case START_EVT:
-    ESP_LOGI(TAG, "idle-INIT\n");
-    return 0;
-
-  case ENTRY_EVT:
-    ESP_LOGI(TAG, "idle-ENTRY\n");
-    actuator.switchOff(actuator.getDown());
-    actuator.switchOff(actuator.getUp());
-    return 0;
-
-  case EXIT_EVT:
-    ESP_LOGI(TAG, "idle-EXIT\n");
-    return 0;
-  }
-  return msg;
-}
-
-Msg const *Shutter::idleHndlr(Msg const *msg)
-{
-  switch (msg->evt)
-  {
-  case START_EVT:
-    ESP_LOGI(TAG, "idle-INIT\n");
-    return 0;
-
-  case ENTRY_EVT:
-    ESP_LOGI(TAG, "idle-ENTRY\n");
-    return 0;
-
-  case EXIT_EVT:
-    ESP_LOGI(TAG, "idle-EXIT\n");
-    return 0;
-  }
-  return msg;
-}
-
-Msg const *Shutter::upHndlr(Msg const *msg)
-{
-  switch (msg->evt)
-  {
-  case START_EVT:
-    ESP_LOGI(TAG, "up-INIT\n");
-    return 0;
-
-  case ENTRY_EVT:
-    ESP_LOGI(TAG, "up-ENTRY\n");
-    actuator.switchOff(actuator.getDown());
-    actuator.switchOn(actuator.getUp());
-    tDebounce = 0u;
-    return 0;
-
-  case EXIT_EVT:
-    ESP_LOGI(TAG, "up-EXIT\n");
-    return 0;
-
-  default:
-    return 0;
-  }
-  return msg;
-}
-
-Msg const *Shutter::topHndlr(Msg const *msg)
-{
-  switch (msg->evt)
-  {
-  case START_EVT:
-    ESP_LOGI(TAG, "top-INIT\n");
-    return 0;
-  case ENTRY_EVT:
-    ESP_LOGI(TAG, "top-ENTRY\n");
-    return 0;
-  case EXIT_EVT:
-    ESP_LOGI(TAG, "top-EXIT\n");
-    return 0;
-  }
-  return msg;
-}
-
-Msg const *Shutter::runningHndlr(Msg const *msg)
-{
-  switch (msg->evt)
-  {
-  case START_EVT:
-    ESP_LOGI(TAG, "running-INIT\n");
-    return 0;
-  case ENTRY_EVT:
-    ESP_LOGI(TAG, "running-ENTRY\n");
-    tRunning = 0u;
-    return 0;
-  case EXIT_EVT:
-    ESP_LOGI(TAG, "running-EXIT\n");
-    return 0;
-  default:
-    return 0;
-  }
-  return msg;
-}
-
-Shutter::Shutter(string room,
-                 string dir,
-                 Sensor sensor,
-                 Actuator actuator)
-    : Hsm("shutter", (EvtHndlr)&Shutter::topHndlr),
-      idle("idle", &top, (EvtHndlr)&Shutter::idleHndlr),
-      up("up", &top, (EvtHndlr)&Shutter::upHndlr),
-      down("down", &top, (EvtHndlr)&Shutter::downHndlr),
-      stop("stop", &top, (EvtHndlr)&Shutter::stopHndlr),
-      running("running", &top, (EvtHndlr)&Shutter::runningHndlr)
-{
-  room = room;
-  dir = dir;
-  sensor = sensor;
-  actuator = actuator;
-}
-
-static void modelTask(void *args)
-{
-  (void *)args;
-  uint8_t buffer[32];
-  qHandleModel = xQueueCreate(128, sizeof(buffer));
-  if (NULL == qHandleModel)
-  {
-    ESP_LOGE(TAG, "q creation failed");
-    return;
-  }
-
-  while (xQueueReceive(qHandleModel, buffer, portMAX_DELAY))
-  {
-  }
-}
-
-static void sensorTask(void *args)
-{
-  (void *)args;
-  sensorEvent_t msg;
-  qHandleSensor = xQueueCreate(128, sizeof(msg));
-  if (NULL == qHandleSensor)
-  {
-    ESP_LOGE(TAG, "sesnor q creation failed");
-    return;
-  }
-
-  memset(&msg, 0, sizeof(msg));
-  while (xQueueReceive(qHandleSensor, &msg, portMAX_DELAY))
-  {
-    uint8_t port = 0;
-    uint8_t portA = 0;
-    uint8_t portB = 0;
-    switch (msg)
-    {
-    case SENSOR_INT_U18_A:
-    case SENSOR_INT_U18_B:
-      mcpU18.interruptedBy(portA, portB);
-      if (portA > 0)
-      {
-        port = mcpU18.readPort(MCP23017Port::A);
-        for (int i = 0; i < sizeof(uint8_t); i++)
-        {
-          if ((port & (1u << i)) > 0)
-          {
-          }
-        }
-      }
-      if (portB > 0)
-      {
-        port = mcpU18.readPort(MCP23017Port::B);
-      }
-      break;
-
-      break;
-    // case SENSOR_INT_U35_A:
-    //   port = mcpU35.readPort(MCP23017Port::A);
-    //   break;
-    // case SENSOR_INT_U35_B:
-    //   port = mcpU35.readPort(MCP23017Port::B);
-    //   break;
-    default:
-      break;
-    }
-    memset(&msg, 0, sizeof(msg));
-  }
-}
-
-static void initSensorMcps(MCP23017 *mcp)
-{
-  mcp->init();
-  mcp->portMode(MCP23017Port::A, 0b11111111); // Port A as input
-  mcp->portMode(MCP23017Port::B, 0b11111111); // Port B as input
-
-  mcp->interruptMode(MCP23017InterruptMode::Separated);
-  mcp->interrupt(MCP23017Port::A, FALLING);
-  mcp->interrupt(MCP23017Port::B, FALLING);
-
-  mcp->writeRegister(MCP23017Register::IPOL_A, 0x00);
-  mcp->writeRegister(MCP23017Register::IPOL_B, 0x00);
-
-  mcp->writeRegister(MCP23017Register::GPIO_A, 0x00);
-  mcp->writeRegister(MCP23017Register::GPIO_B, 0x00);
-
-  mcp->clearInterrupts();
-}
-
-void setup()
-{
-  Wire.begin(I2C_SDA, I2C_SCL, I2C_FRQ);
-
-  pinMode(SENSOR_U18_INTA, INPUT_PULLUP);
-  pinMode(SENSOR_U18_INTB, INPUT_PULLUP);
-  pinMode(SENSOR_U35_INTA, INPUT_PULLUP);
-  pinMode(SENSOR_U35_INTB, INPUT_PULLUP);
-
-  attachInterrupt(digitalPinToInterrupt(SENSOR_U18_INTA), sensorIntU18A, FALLING);
-  attachInterrupt(digitalPinToInterrupt(SENSOR_U18_INTB), sensorIntU18B, FALLING);
-  attachInterrupt(digitalPinToInterrupt(SENSOR_U35_INTA), sensorIntU35A, FALLING);
-  attachInterrupt(digitalPinToInterrupt(SENSOR_U35_INTB), sensorIntU35B, FALLING);
-
-  initSensorMcps(&mcpU18);
-  initSensorMcps(&mcpU36);
-
-  for (Shutter s : shutters)
-  {
-    s.onStart();
-  }
-}
-
-void processSensorEvent(MCP23017Name mcpName, MCP23017Port portNumber, uint8_t portValue)
+static void processSensorEvent(MCP23017Name mcpName, MCP23017Port portNumber, uint8_t portValue)
 {
   int offset = (MCP23017Port::A == portNumber)  ? MCP23017Pin::GPA0 : MCP23017Pin::GPB0;
   for (int i = 0; i < 8; i++)
@@ -434,6 +87,16 @@ void processSensorEvent(MCP23017Name mcpName, MCP23017Port portNumber, uint8_t p
           {
             struct Msg msg = {SENSOR_UP_EVT};
             s.onEvent(&msg);
+            switch(s.getShutterCmd())
+            {
+              case ShutterCmd::SWITCH_UP_ON:
+                for(IoPortExpander io: actuatorIoPortExp)
+                {
+                  
+                }
+              break;
+            }
+
           }
           else if (s.sensor.getDown() == static_cast<MCP23017Pin::Names>(i) + offset)
           {
@@ -448,6 +111,37 @@ void processSensorEvent(MCP23017Name mcpName, MCP23017Port portNumber, uint8_t p
     }
 }
 
+void setup()
+{
+  Wire.begin(I2C_SDA, I2C_SCL, I2C_FRQ);
+
+  for (IoPortExpander i : sensorIoPortExp)
+  {
+    i.initSensors();
+  }
+ 
+  for (IoPortExpander i : actuatorIoPortExp)
+  {
+    i.initActuators();
+  }
+
+  pinMode(SENSOR_U18_INTA, INPUT_PULLUP);
+  pinMode(SENSOR_U18_INTB, INPUT_PULLUP);
+  pinMode(SENSOR_U35_INTA, INPUT_PULLUP);
+  pinMode(SENSOR_U35_INTB, INPUT_PULLUP);
+
+  attachInterrupt(digitalPinToInterrupt(SENSOR_U18_INTA), sensorInterrupt, FALLING);
+  attachInterrupt(digitalPinToInterrupt(SENSOR_U18_INTB), sensorInterrupt, FALLING);
+  attachInterrupt(digitalPinToInterrupt(SENSOR_U35_INTA), sensorInterrupt, FALLING);
+  attachInterrupt(digitalPinToInterrupt(SENSOR_U35_INTB), sensorInterrupt, FALLING);
+
+  for (Shutter s : shutters)
+  {
+    s.onStart();
+  }
+}
+
+
 void loop()
 {
   // do nothing here, as software runs in dedicated tasks
@@ -459,14 +153,17 @@ void loop()
   if (interrupt)
   {
     noInterrupts();
-    mcpU18.interruptedBy(u18PortA, u18PortB);
-    mcpU36.interruptedBy(u36PortA, u36PortB);
+    for(IoPortExpander i: sensorIoPortExp)
+    {
+      i.interruptedBy();
+    }
     interrupt = false;
     interrupts();
 
-    processSensorEvent(MCP23017Name::U18, MCP23017Port::A,  u18PortA);
-    processSensorEvent(MCP23017Name::U18, MCP23017Port::B,  u18PortB);
-    processSensorEvent(MCP23017Name::U36, MCP23017Port::A,  u36PortA);
-    processSensorEvent(MCP23017Name::U36, MCP23017Port::B,  u36PortB);
+    for(IoPortExpander i: sensorIoPortExp)
+    {
+      //processSensorEvent(i.getName(), MCP23017Port::A,  i.getInterruptedPort(MCP23017Port::A));
+      //processSensorEvent(i.getName(), MCP23017Port::B,  i.getInterruptedPort(MCP23017Port::B));
+    }
   }
 }

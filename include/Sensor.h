@@ -1,5 +1,7 @@
-#pragma once
+#ifndef __SENSOR_H__
+#define __SENSOR_H__
 
+#include "DeviceNames.h"
 #include "MCP23017.h"
 
 class Sensor
@@ -30,3 +32,5 @@ public:
         return _name;
     }
 };
+
+#endif // __SENSOR_H__

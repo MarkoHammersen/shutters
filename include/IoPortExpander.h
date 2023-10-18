@@ -1,141 +1,94 @@
-#pragma once
+#ifndef __IO_EXPANDER_H__
+#define __IO_EXPANDER_H__
 
+#include "DeviceNames.h"
 #include "MCP23017.h"
 #include "Wire.h"
-
 
 class IoPortExpander
 {
 private:
-    string name;
-    MCP23017 mcp;
-    int findPin(string pinName);
-
+    MCP23017Name _name;
+    MCP23017 _mcp;
+    uint8_t _iPortA;
+    uint8_t _iPortB;
 public:
-    IoPortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 mcp);
+    
+    IoPortExpander(MCP23017Name name, MCP23017 mcp);
     ~IoPortExpander();
 
-    void switchOff(string pinName);
-    void switchOn(string pinName);
-    string getName();
+    void switchOff(MCP23017Pin::Names pin);
+    void switchOn(MCP23017Pin::Names pin);
+    void initSensors();
+    void initActuators();
+    void interruptedBy();
+    uint8_t getInterruptedPort(MCP23017Port port);
+    MCP23017Name getName();
 };
 
-int IoPortExpander::findPin(string pinName)
+void IoPortExpander::switchOn(MCP23017Pin::Names pin)
 {
-    // pinName must be of format "A0" to "A7" or "B0" to "B7"
-    if (pinName.length() != 2)
-    {
-        return -1;
-    }
-    int pin = static_cast<int>(pinName[1] - '0');
-    if ((pin < 0) || (pin > 7))
-    {
-        return -1;
-    }
-
-    switch (pinName[0])
-    {
-    case 'a':
-    case 'A':
-        return (MCP23017Pin::GPA0 + pin);
-
-        break;
-    case 'b':
-    case 'B':
-        return (MCP23017Pin::GPB0 + pin);
-        break;
-
-    default:
-        break;
-    }
-    return -1;
+    _mcp.digitalWrite(pin, HIGH);
 }
 
-void IoPortExpander::switchOn(string pinName)
+void IoPortExpander::switchOff(MCP23017Pin::Names pin)
 {
-    int pin = findPin(pinName);
-    if (pin < 0)
-    {
-        return;
-    }
-    mcp.digitalWrite(pin, HIGH);
+    _mcp.digitalWrite(pin, LOW);
 }
 
-void IoPortExpander::switchOff(string pinName)
+MCP23017Name IoPortExpander::getName()
 {
-    int pin = findPin(pinName);
-    if (pin < 0)
-    {
-        return;
-    }
-    mcp.digitalWrite(pin, LOW);
+    return _name;
 }
 
-IoPortExpander::IoPortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp)
+IoPortExpander::IoPortExpander(MCP23017Name name, MCP23017 mcp)
 {
-    Wire.begin(I2C_SDA, I2C_SCL, I2C_FRQ);
-
-    if (PORT_EXPANDER_TYPE::ACTUATOR == type)
-    {
-        mcp.init();
-        mcp.portMode(MCP23017Port::A, 0); // Port A as output
-        mcp.portMode(MCP23017Port::B, 0); // Port B as output
-
-        mcp.writeRegister(MCP23017Register::GPIO_A, 0x00); // Reset port A
-        mcp.writeRegister(MCP23017Register::GPIO_B, 0x00); // Reset port B
-    }
-    else
-    {
-        return;
-    }
-
-    name = name;
-    mcp = mcp;
-}
-
-IoPortExpander::IoPortExpander(PORT_EXPANDER_TYPE type, string name, MCP23017 &mcp)
-{
-    if (PORT_EXPANDER_TYPE::SENSOR == type)
-    {
-        mcp.init();
-        mcp.portMode(MCP23017Port::A, 0b11111111); // Port A as input
-        mcp.portMode(MCP23017Port::B, 0b11111111); // Port B as input
-
-        mcp.interruptMode(MCP23017InterruptMode::Separated);
-        mcp.interrupt(MCP23017Port::A, FALLING);
-        mcp.interrupt(MCP23017Port::B, FALLING);
-
-        mcp.writeRegister(MCP23017Register::IPOL_A, 0x00);
-        mcp.writeRegister(MCP23017Register::IPOL_B, 0x00);
-
-        mcp.writeRegister(MCP23017Register::GPIO_A, 0x00);
-        mcp.writeRegister(MCP23017Register::GPIO_B, 0x00);
-
-        mcp.clearInterrupts();
-    }
-    else if (PORT_EXPANDER_TYPE::ACTUATOR == type)
-    {
-        mcp.init();
-        mcp.portMode(MCP23017Port::A, 0); // Port A as output
-        mcp.portMode(MCP23017Port::B, 0); // Port B as output
-
-        mcp.writeRegister(MCP23017Register::GPIO_A, 0x00); // Reset port A
-        mcp.writeRegister(MCP23017Register::GPIO_B, 0x00); // Reset port B
-    }
-    else
-    {
-        return;
-    }
-
-    name = name;
-    mcp = mcp;
+    _name = name;
+    _mcp = mcp;
 }
 
 IoPortExpander::~IoPortExpander()
 {
 }
 
-string IoPortExpander::getName()
+void IoPortExpander::initSensors()
 {
-    return name;
+  _mcp.init();
+  _mcp.portMode(MCP23017Port::A, 0b11111111); // Port A as input
+  _mcp.portMode(MCP23017Port::B, 0b11111111); // Port B as input
+
+  _mcp.interruptMode(MCP23017InterruptMode::Separated);
+  _mcp.interrupt(MCP23017Port::A, FALLING);
+  _mcp.interrupt(MCP23017Port::B, FALLING);
+
+  _mcp.writeRegister(MCP23017Register::IPOL_A, 0x00);
+  _mcp.writeRegister(MCP23017Register::IPOL_B, 0x00);
+
+  _mcp.writeRegister(MCP23017Register::GPIO_A, 0x00);
+  _mcp.writeRegister(MCP23017Register::GPIO_B, 0x00);
+
+  _mcp.clearInterrupts();
 }
+
+void IoPortExpander::initActuators()
+{
+    _mcp.init();
+
+    _mcp.portMode(MCP23017Port::A, 0);          //Port A as output
+    _mcp.portMode(MCP23017Port::B, 0);          //Port B as output
+
+    _mcp.writeRegister(MCP23017Register::GPIO_A, 0x00);  //Reset port A 
+    _mcp.writeRegister(MCP23017Register::GPIO_B, 0x00);  //Reset port A 
+}
+
+void IoPortExpander::interruptedBy()
+{
+    _mcp.interruptedBy(_iPortA, _iPortB);
+}
+
+uint8_t IoPortExpander::getInterruptedPort(MCP23017Port port)
+{
+    return (MCP23017Port::A == port) ? _iPortA: _iPortB;
+}
+
+#endif // __IO_EXPANDER_H__
