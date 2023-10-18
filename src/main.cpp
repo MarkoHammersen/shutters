@@ -10,18 +10,17 @@
 #include "freertos/semphr.h"
 #include "esp_log.h"
 
-#include "DeviceNames.h"
 #include "hsm.hpp"
 #include "Actuator.h"
 #include "Sensor.h"
 #include "IoPortExpander.h"
 #include "Shutter.h"
 
+
 using namespace std;
 #define TAG "shutter"
 
 static void sensorInterrupt();
-static void processSensorEvent(MCP23017Name mcpName, MCP23017Port portNumber, uint8_t portValue);
 
 /*
 Name	    Input				                    Output
@@ -40,18 +39,17 @@ Büro	    U1	        A7	A6	    A	            U37	        B6	B5
 */
 
 static bool interrupt = false;
-static vector<IoPortExpander> sensorIoPortExp ={
-  IoPortExpander(MCP23017Name::U18, MCP23017(I2C_ADDR_SENSOR_U18)),
-  IoPortExpander(MCP23017Name::U35, MCP23017(I2C_ADDR_SENSOR_U35))
-};
-static vector<IoPortExpander> actuatorIoPortExp ={
-  IoPortExpander(MCP23017Name::U36, MCP23017(I2C_ADDR_ACTUATOR_U36)),
-  IoPortExpander(MCP23017Name::U37, MCP23017(I2C_ADDR_ACTUATOR_U37))
-};
+
+static vector<IoPortExpander> sensorIoPortExp = {
+    IoPortExpander(I2C_ADDR_SENSOR_U18, MCP23017(I2C_ADDR_SENSOR_U18)),
+    IoPortExpander(I2C_ADDR_SENSOR_U35, MCP23017(I2C_ADDR_SENSOR_U35))};
+static vector<IoPortExpander> actuatorIoPortExp = {
+    IoPortExpander(I2C_ADDR_ACTUATOR_U36, MCP23017(I2C_ADDR_ACTUATOR_U36)),
+    IoPortExpander(I2C_ADDR_ACTUATOR_U37, MCP23017(I2C_ADDR_ACTUATOR_U37))};
 
 static vector<Shutter> shutters =
     {
-        Shutter("Lina", "Ost", Sensor(MCP23017Name::U18, MCP23017Pin::GPB0, MCP23017Pin::GPB1), Actuator(MCP23017Name::U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+        Shutter("Lina", "Ost", Sensor(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPB0, MCP23017Pin::GPB1), Actuator(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
         // Shutter("Lina", "Sued",     Sensor(Port("U36",  "B2"), Port("U36",  "B3")), Actuator(Port("U4",  "A4"), Port("A4", "A3"))),
         // Shutter("Flur", "Sued",     Sensor(Port("U36",  "B4"), Port("U36",  "B5")), Actuator(Port("U4",  "A2"), Port("A2", "A1"))),
         // Shutter("Waesche", "Sued",  Sensor(Port("U36",  "B6"), Port("U36",  "B7")), Actuator(Port("U4",  "A0"), Port("A0", "B6"))),
@@ -69,48 +67,6 @@ static void sensorInterrupt()
   interrupt = true;
 }
 
-static void processSensorEvent(MCP23017Name mcpName, MCP23017Port portNumber, uint8_t portValue)
-{
-  int offset = (MCP23017Port::A == portNumber)  ? MCP23017Pin::GPA0 : MCP23017Pin::GPB0;
-  for (int i = 0; i < 8; i++)
-    {
-      if ((portValue & (1u << i)) > 0)
-      {
-        for (Shutter s : shutters)
-        {
-          if(mcpName != s.sensor.getMcp23017Name())
-          {
-            continue;
-          }
-        
-          if (s.sensor.getUp() == static_cast<MCP23017Pin::Names>(i) + offset)
-          {
-            struct Msg msg = {SENSOR_UP_EVT};
-            s.onEvent(&msg);
-            switch(s.getShutterCmd())
-            {
-              case ShutterCmd::SWITCH_UP_ON:
-                for(IoPortExpander io: actuatorIoPortExp)
-                {
-                  
-                }
-              break;
-            }
-
-          }
-          else if (s.sensor.getDown() == static_cast<MCP23017Pin::Names>(i) + offset)
-          {
-            struct Msg msg = {SENSOR_DOWN_EVT};
-            s.onEvent(&msg);
-          }
-          else
-          {
-          }
-        }
-      }
-    }
-}
-
 void setup()
 {
   Wire.begin(I2C_SDA, I2C_SCL, I2C_FRQ);
@@ -119,7 +75,7 @@ void setup()
   {
     i.initSensors();
   }
- 
+
   for (IoPortExpander i : actuatorIoPortExp)
   {
     i.initActuators();
@@ -137,33 +93,87 @@ void setup()
 
   for (Shutter s : shutters)
   {
-    s.onStart();
+    s.startHsm();
   }
 }
 
-
 void loop()
 {
-  // do nothing here, as software runs in dedicated tasks
-  uint8_t u18PortA;
-  uint8_t u18PortB;
-  uint8_t u36PortA;
-  uint8_t u36PortB;
-
   if (interrupt)
   {
     noInterrupts();
-    for(IoPortExpander i: sensorIoPortExp)
+    for (IoPortExpander i : sensorIoPortExp)
     {
       i.interruptedBy();
     }
     interrupt = false;
     interrupts();
 
-    for(IoPortExpander i: sensorIoPortExp)
+    for (Shutter i : shutters)
     {
-      //processSensorEvent(i.getName(), MCP23017Port::A,  i.getInterruptedPort(MCP23017Port::A));
-      //processSensorEvent(i.getName(), MCP23017Port::B,  i.getInterruptedPort(MCP23017Port::B));
+      i.processSensorEvents();
+    }
+  }
+
+  // process timeouts
+  for (Shutter i : shutters)
+  {
+    i.processSensorDebouncing();
+  }
+}
+
+uint8_t sensorGetSinglePinEvent(uint32_t i2cAddr, MCP23017Pin::Names pin)
+{
+  for (IoPortExpander i : sensorIoPortExp)
+  {
+    if (i.getI2cAddr() == i2cAddr)
+    {
+      uint8_t port;
+      if (pin < MCP23017Pin::Names::GPB0)
+      {
+        port = i.getInterruptedPort(MCP23017Port::A);
+        if ((port & (1 << pin)) > 0)
+        {
+          return 1;
+        }
+        else
+        {
+          return 0;
+        }
+      }
+      else
+      {
+        port = i.getInterruptedPort(MCP23017Port::B);
+          if((port & (1 << (pin - MCP23017Pin::Names::GPB0))) > 0)
+          {
+          return 1;
+          }
+          else
+          {
+          return 0;
+          }
+      }
+    }
+  }
+
+  assert(false); // never get here, due to invalid i2c address
+}
+
+void actuatorCmd(uint32_t i2cAddr, MCP23017Pin::Names pin, uint8_t state)
+{
+  for (IoPortExpander i : actuatorIoPortExp)
+  {
+    if (i.getI2cAddr() == i2cAddr)
+    {
+      if (HIGH == state)
+      {
+          i.switchOn(pin);
+      }
+      else
+      {
+          i.switchOff(pin);
+      }
+      break;
     }
   }
 }

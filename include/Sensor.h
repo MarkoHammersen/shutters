@@ -1,21 +1,20 @@
 #ifndef __SENSOR_H__
 #define __SENSOR_H__
 
-#include "DeviceNames.h"
 #include "MCP23017.h"
 
 class Sensor
 {
 protected:
-    MCP23017Name _name;
+    uint32_t _i2cAddr;
     MCP23017Pin::Names _up;
     MCP23017Pin::Names _down;
 
 public:
     Sensor(){};
-    Sensor(MCP23017Name name, MCP23017Pin::Names up, MCP23017Pin::Names down)
+    Sensor(uint32_t i2cAddr, MCP23017Pin::Names up, MCP23017Pin::Names down)
     {
-        _name = name;
+        _i2cAddr = i2cAddr;
         _up = up;
         _down = down;
     }
@@ -27,9 +26,9 @@ public:
     {
         return _down;
     }
-    MCP23017Name getMcp23017Name()
+    uint32_t getI2cAddr()
     {
-        return _name;
+        return _i2cAddr;
     }
 };
 

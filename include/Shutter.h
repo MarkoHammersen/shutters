@@ -4,27 +4,12 @@
 #include <string>
 using namespace std;
 
-#include "DeviceNames.h"
+#include <arduino-timer.h>
 #include "hsm.hpp"
 #include "Sensor.h"
 #include "Actuator.h"
 
-enum class ShutterCmd : uint8_t
-{
-    IDLE,
-	SWITCH_UP_ON,
-	SWITCH_DOWN_ON,
-    STOP,
-};
-
-typedef enum HsmEvents
-{
-    SENSOR_UP_EVT,
-    SENSOR_DOWN_EVT,
-    TIMEOUT_EVT
-} hsmEvent_t;
-
-class Shutter : public Hsm
+class Shutter : private Hsm
 {
 protected:
     string _room;
@@ -37,26 +22,25 @@ protected:
     State _up;
     State _down;
 
-    ShutterCmd _cmd;
+    Timer<> _timer;
+    bool _timeout;
 
-    uint32_t timeout;
-    uint32_t tRunning;
-    uint32_t tDebounce;
-    uint32_t tStopDebounce;
+    Msg const *_topHndlr(Msg const *msg);
+    Msg const *_idleHndlr(Msg const *msg);
+    Msg const *_stopHndlr(Msg const *msg);
+    Msg const *_runningHndlr(Msg const *msg);
+    Msg const *_upHndlr(Msg const *msg);
+    Msg const *_downHndlr(Msg const *msg);
+
 
 public:
     Shutter(string room, string dir, Sensor s, Actuator a);
-    Msg const *topHndlr(Msg const *msg);
-    Msg const *idleHndlr(Msg const *msg);
-    Msg const *stopHndlr(Msg const *msg);
-    Msg const *runningHndlr(Msg const *msg);
-    Msg const *upHndlr(Msg const *msg);
-    Msg const *downHndlr(Msg const *msg);
-
     Sensor sensor;
     Actuator actuator;
 
-    ShutterCmd getShutterCmd();
+    void startHsm();
+    void processSensorEvents();
+    void processSensorDebouncing();
 };
 
 #endif // __SHUTTER_H__

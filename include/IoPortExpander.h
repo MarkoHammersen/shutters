@@ -1,20 +1,20 @@
 #ifndef __IO_EXPANDER_H__
 #define __IO_EXPANDER_H__
 
-#include "DeviceNames.h"
+
 #include "MCP23017.h"
 #include "Wire.h"
 
 class IoPortExpander
 {
 private:
-    MCP23017Name _name;
+    uint32_t _i2cAddr;
     MCP23017 _mcp;
     uint8_t _iPortA;
     uint8_t _iPortB;
 public:
     
-    IoPortExpander(MCP23017Name name, MCP23017 mcp);
+    IoPortExpander(uint32_t i2cAddr, MCP23017 mcp);
     ~IoPortExpander();
 
     void switchOff(MCP23017Pin::Names pin);
@@ -23,7 +23,7 @@ public:
     void initActuators();
     void interruptedBy();
     uint8_t getInterruptedPort(MCP23017Port port);
-    MCP23017Name getName();
+    uint32_t getI2cAddr();
 };
 
 void IoPortExpander::switchOn(MCP23017Pin::Names pin)
@@ -36,14 +36,14 @@ void IoPortExpander::switchOff(MCP23017Pin::Names pin)
     _mcp.digitalWrite(pin, LOW);
 }
 
-MCP23017Name IoPortExpander::getName()
+uint32_t IoPortExpander::getI2cAddr()
 {
-    return _name;
+    return _i2cAddr;
 }
 
-IoPortExpander::IoPortExpander(MCP23017Name name, MCP23017 mcp)
+IoPortExpander::IoPortExpander(uint32_t i2cAddr, MCP23017 mcp)
 {
-    _name = name;
+    _i2cAddr = i2cAddr;
     _mcp = mcp;
 }
 
