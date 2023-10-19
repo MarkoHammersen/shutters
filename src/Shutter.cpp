@@ -323,7 +323,9 @@ static void vTaskShutter(void *arg)
 
 void initShutters()
 {
+#ifndef UNIT_TEST
     TaskHandle_t xHandleShutters = NULL;
     xTaskCreate(vTaskShutter, "shutter", 4096, NULL, 10, &xHandleShutters);
     configASSERT(xHandleShutters != NULL);
+#endif // UNIT_TEST
 }

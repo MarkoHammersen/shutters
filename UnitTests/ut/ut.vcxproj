@@ -97,9 +97,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\Actuator.h" />
-    <ClInclude Include="..\..\include\IoPortExpander.h" />
-    <ClInclude Include="..\..\include\Sensor.h" />
     <ClInclude Include="..\..\include\Shutter.h" />
     <ClInclude Include="stubs\Arduino.h" />
     <ClInclude Include="stubs\esp_log.h" />
@@ -107,8 +104,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\.pio\libdeps\esp32-target\cpp-State-Oriented-Programming\hsm.cpp" />
-    <ClCompile Include="..\..\.pio\libdeps\esp32-target\MCP23017\src\MCP23017.cpp" />
-    <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\Shutter.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>

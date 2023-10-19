@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <assert.h>
 
 //Interrupt Modes
 #define RISING    0x01
@@ -23,6 +24,8 @@
 
 #define HIGH 1
 #define LOW 1
+
+#define pdTRUE 1
 
 #define I2C_SDA  1
 #define I2C_SCL  2
@@ -49,8 +52,15 @@
 #define bitToggle(value, bit) ((value) ^= (1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) ((bitvalue) ? bitSet(value, bit) : bitClear(value, bit))
 
+typedef uint8_t* QueueHandle_t;
+#define portMAX_DELAY 0
+
+void xQueueSend(QueueHandle_t handle, void* msg, uint32_t delay);
+uint32_t xQueueReceive(QueueHandle_t handle, void* msg, uint32_t delay);
+QueueHandle_t xQueueCreate(uint32_t count, size_t size);
+
+#define configASSERT assert
+
 unsigned long millis();
 void pinMode(uint8_t pin, uint8_t mode);
-void noInterrupts();
-void interrupts();
 void attachInterrupt(uint8_t pin, void* intRoutine, int mode);
