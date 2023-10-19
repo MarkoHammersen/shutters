@@ -1,5 +1,5 @@
 #include <Arduino.h>
-//#include <107-Arduino-CriticalSection.h>
+#include <arduino-timer.h>
 #include <vector>
 #include "MCP23017.h"
 #include "Message.h"
@@ -32,13 +32,15 @@ static std::vector<Shutter> shutters =
         // Shutter("Office", "East",     Sensor(Port("U1",   "A7"), Port("U1",   "A6")), Actuator(Port("U37", "B1"), Port("B6", "B5")))
 };
 
-// static bool _onTimeout(void *arg)
-// {
-//     /* (uint8_t)arg is the shutter window */
-//     Message msg(MsgEvent::TIMEOUT, 0 /*dont care*/, (uint8_t)arg);
-//     xQueueSend(qHandleShutters, &msg, portMAX_DELAY);
-//     return false; // do not repeat timer
-// }
+static bool _onTimeout(void *arg)
+{
+    /* (uint8_t)arg is the shutter window */
+    appMessage_t msg;
+    msg.evt = TIMEOUT;
+    msg.data = *(uint8_t *)arg;
+    xQueueSend(qHandleShutters, &msg, portMAX_DELAY);
+    return false; // do not repeat timer
+}
 
 Shutter::Shutter(Window window, PinSetup sensor, PinSetup actuator)
     : Hsm("shutter", (EvtHndlr)&Shutter::_topHndlr),
@@ -52,8 +54,7 @@ Shutter::Shutter(Window window, PinSetup sensor, PinSetup actuator)
     _sensor = sensor;
     _actuator = actuator;
 
-    // call the toggle_led function every 1000 millis (1 second)
-    //auto _timer = timer_create_default();
+    _timer = timer_create_default();
 }
 
 Msg const *Shutter::_downHndlr(Msg const *msg)
@@ -76,9 +77,8 @@ Msg const *Shutter::_downHndlr(Msg const *msg)
         msg.evt = RUN;
         msg.data = _actuator.getDown();
         xQueueSend(qHandleActuators, &msg, portMAX_DELAY);
-        
-        //uint8_t num = static_cast<uint8_t>(_window);
-        //_timer.in(HSM_DEBOUNCE_TIME, _onTimeout, &num);
+        uint8_t num = static_cast<uint8_t>(_window);
+        _timer.in(HSM_DEBOUNCE_TIME, _onTimeout, &num);
     }
         return 0;
 
@@ -107,6 +107,7 @@ Msg const *Shutter::_stopHndlr(Msg const *msg)
 
     case ENTRY_EVT:
         ESP_LOGI(TAG, "%d: stop-ENTRY", _window);
+
         appMessage_t msg;
         msg.i2cAddr = _actuator.getI2cAddr();
         msg.evt = STOP;
@@ -114,7 +115,10 @@ Msg const *Shutter::_stopHndlr(Msg const *msg)
         xQueueSend(qHandleActuators, &msg, portMAX_DELAY);
         msg.data = _actuator.getUp();
         xQueueSend(qHandleActuators, &msg, portMAX_DELAY);
-        //_timer.in(HSM_DEBOUNCE_TIME, _onTimeout, &_window);
+{
+        uint8_t num = static_cast<uint8_t>(_window);
+        _timer.in(HSM_DEBOUNCE_TIME, _onTimeout, &num);
+}
         return 0;
 
     case EXIT_EVT:
@@ -177,8 +181,10 @@ Msg const *Shutter::_upHndlr(Msg const *msg)
         msg.evt = RUN;
         msg.data = _actuator.getUp();
         xQueueSend(qHandleActuators, &msg, portMAX_DELAY);
-
-        //_timer.in(HSM_DEBOUNCE_TIME, _onTimeout, &_window);
+{
+        uint8_t num = static_cast<uint8_t>(_window);
+        _timer.in(HSM_DEBOUNCE_TIME, _onTimeout, &num);
+}
         return 0;
 
     case EXIT_EVT:
@@ -221,8 +227,11 @@ Msg const *Shutter::_runningHndlr(Msg const *msg)
         ESP_LOGI(TAG, "%d: running-INIT", _window);
         return 0;
     case ENTRY_EVT:
+    {
         ESP_LOGI(TAG, "%d: running-ENTRY", _window);
-        //_timer.in(HSM_RUN_TIME, _onTimeout, &_window);
+        uint8_t num = static_cast<uint8_t>(_window);
+        _timer.in(HSM_RUN_TIME, _onTimeout, &num);
+    }
         return 0;
     case EXIT_EVT:
         ESP_LOGI(TAG, "%d: running-EXIT", _window);
@@ -265,7 +274,9 @@ void Shutter::processMsg(const appMessage_t *msg)
                 Msg const hsmMsg = {SENSOR_DOWN_EVT};
                 onEvent(&hsmMsg);
             }
-            else{}
+            else
+            {
+            }
         }
         break;
 
@@ -294,7 +305,7 @@ static void vTaskShutter(void *arg)
     {
         s.startHsm();
     }
-    
+
     while (1)
     {
         if (pdTRUE == xQueueReceive(qHandleShutters, &msg, portMAX_DELAY))
@@ -303,10 +314,6 @@ static void vTaskShutter(void *arg)
             {
                 i.processMsg(&msg);
             }
-        }
-        else
-        {
-            esp_restart(); // will never return
         }
     }
 }

@@ -1,6 +1,7 @@
 #ifndef __SHUTTER_H__
 #define __SHUTTER_H__
 
+#include <arduino-timer.h>
 #include "hsm.hpp"
 #include "Message.h"
 #include "PinSetup.h"
@@ -22,6 +23,8 @@ protected:
 
     PinSetup _sensor;
     PinSetup _actuator;
+
+    Timer<> _timer;
 
     Msg const *_topHndlr(Msg const *msg);
     Msg const *_idleHndlr(Msg const *msg);

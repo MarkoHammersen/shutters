@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <107-Arduino-CriticalSection.h>
 #include <stdio.h>
 #include <assert.h>
 #include <stdint.h>
