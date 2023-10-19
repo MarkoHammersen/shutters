@@ -123,30 +123,14 @@ uint8_t sensorGetSinglePinEvent(uint32_t i2cAddr, MCP23017Pin::Names pin)
   {
     if (i.getI2cAddr() == i2cAddr)
     {
-      uint8_t port;
-      if (pin < MCP23017Pin::Names::GPB0)
+      uint8_t port = i.getInterruptedPort(static_cast<MCP23017Port>(pin / 8));
+      if ((port & (1 << (pin % 8))) > 0)
       {
-        port = i.getInterruptedPort(MCP23017Port::A);
-        if ((port & (1 << pin)) > 0)
-        {
-          return 1;
-        }
-        else
-        {
-          return 0;
-        }
+        return 1;
       }
       else
       {
-        port = i.getInterruptedPort(MCP23017Port::B);
-        if ((port & (1 << (pin - MCP23017Pin::Names::GPB0))) > 0)
-        {
-          return 1;
-        }
-        else
-        {
-          return 0;
-        }
+        return 0;
       }
     }
   }
