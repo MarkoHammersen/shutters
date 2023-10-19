@@ -43,6 +43,8 @@ public:
     void startHsm();
     void processSensorEvents();
     void processSensorDebouncing();
+    string getRoom(){return _room;};
+    string getDir(){return _dir;};
 };
 
 #endif // __SHUTTER_H__

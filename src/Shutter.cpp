@@ -13,7 +13,7 @@ using namespace std;
 extern void actuatorCmd(uint32_t i2cAddr, MCP23017Pin::Names pin, uint8_t state);
 extern uint8_t sensorGetSinglePinEvent(uint32_t i2cAddr, MCP23017Pin::Names pin);
 
-static bool _timeoutDebounce(void *arg)
+static bool _onTimeout(void *arg)
 {
     *(bool *)arg = true;
     return false; // do not repeat timer
@@ -45,22 +45,22 @@ Msg const *Shutter::_downHndlr(Msg const *msg)
     switch (msg->evt)
     {
     case START_EVT:
-        ESP_LOGI(TAG, "down-INIT");
+        ESP_LOGI(TAG, "%s : %s: down-INIT", getRoom(), getDir());
         return 0;
 
     case ENTRY_EVT:
-        ESP_LOGI(TAG, "down-ENTRY");
+        ESP_LOGI(TAG, "%s : %s: down-ENTRY", getRoom(), getDir());
         actuatorCmd(actuator.getI2cAddr(), actuator.getUp(), LOW);
         actuatorCmd(actuator.getI2cAddr(), actuator.getDown(), HIGH);
-        _timer.in(HSM_DEBOUNCE_TIME, _timeoutDebounce, &_timeout);
+        _timer.in(HSM_DEBOUNCE_TIME, _onTimeout, &_timeout);
         return 0;
 
     case EXIT_EVT:
-        ESP_LOGI(TAG, "down-EXIT");
+        ESP_LOGI(TAG, "%s : %s: down-EXIT", getRoom(), getDir());
         return 0;
 
     case TIMEOUT_EVT:
-        ESP_LOGI(TAG, "down-TIMEOUT");
+        ESP_LOGI(TAG, "%s : %s: down-TIMEOUT", getRoom(), getDir());
         STATE_TRAN(&_running);
         break;
 
@@ -75,22 +75,22 @@ Msg const *Shutter::_stopHndlr(Msg const *msg)
     switch (msg->evt)
     {
     case START_EVT:
-        ESP_LOGI(TAG, "stop-INIT");
+        ESP_LOGI(TAG, "%s : %s: stop-INIT", getRoom(), getDir());
         return 0;
 
     case ENTRY_EVT:
-        ESP_LOGI(TAG, "stop-ENTRY");
+        ESP_LOGI(TAG, "%s : %s: stop-ENTRY", getRoom(), getDir());
         actuatorCmd(actuator.getI2cAddr(), actuator.getUp(), LOW);
         actuatorCmd(actuator.getI2cAddr(), actuator.getDown(), LOW);
-        _timer.in(HSM_DEBOUNCE_TIME, _timeoutDebounce);
+        _timer.in(HSM_DEBOUNCE_TIME, _onTimeout);
         return 0;
 
     case EXIT_EVT:
-        ESP_LOGI(TAG, "stop-EXIT");
+        ESP_LOGI(TAG, "%s : %s: stop-EXIT", getRoom(), getDir());
         return 0;
 
     case TIMEOUT_EVT:
-        ESP_LOGI(TAG, "stop-TIMEOUT");
+        ESP_LOGI(TAG, "%s : %s: stop-TIMEOUT", getRoom(), getDir());
         STATE_TRAN(&_idle);
         break;        
     }
@@ -102,24 +102,24 @@ Msg const *Shutter::_idleHndlr(Msg const *msg)
     switch (msg->evt)
     {
     case START_EVT:
-        ESP_LOGI(TAG, "idle-INIT");
+        ESP_LOGI(TAG, "%s : %s: idle-INIT", getRoom(), getDir());
         return 0;
 
     case ENTRY_EVT:
-        ESP_LOGI(TAG, "idle-ENTRY");
+        ESP_LOGI(TAG, "%s : %s: idle-ENTRY", getRoom(), getDir());
         return 0;
 
     case EXIT_EVT:
-        ESP_LOGI(TAG, "idle-EXIT");
+        ESP_LOGI(TAG, "%s : %s: idle-EXIT", getRoom(), getDir());
         return 0;
 
     case SENSOR_UP_EVT:
-        ESP_LOGI(TAG, "idle-SENSOR_UP_EVT");
+        ESP_LOGI(TAG, "%s : %s: idle-SENSOR_UP_EVT", getRoom(), getDir());
         STATE_TRAN(&_up);
         return 0;
 
     case SENSOR_DOWN_EVT:
-        ESP_LOGI(TAG, "idle-SENSOR_DOWN_EVT");
+        ESP_LOGI(TAG, "%s : %s: idle-SENSOR_DOWN_EVT", getRoom(), getDir());
         STATE_TRAN(&_down);
         return 0;        
     }
@@ -131,22 +131,22 @@ Msg const *Shutter::_upHndlr(Msg const *msg)
     switch (msg->evt)
     {
     case START_EVT:
-        ESP_LOGI(TAG, "up-INIT");
+        ESP_LOGI(TAG, "%s : %s: up-INIT", getRoom(), getDir());
         return 0;
 
     case ENTRY_EVT:
-        ESP_LOGI(TAG, "up-ENTRY");
+        ESP_LOGI(TAG, "%s : %s: up-ENTRY", getRoom(), getDir());
         actuatorCmd(actuator.getI2cAddr(), actuator.getDown(), LOW);
         actuatorCmd(actuator.getI2cAddr(), actuator.getUp(), HIGH);
-        _timer.in(HSM_DEBOUNCE_TIME, _timeoutDebounce);
+        _timer.in(HSM_DEBOUNCE_TIME, _onTimeout);
         return 0;
 
     case EXIT_EVT:
-        ESP_LOGI(TAG, "up-EXIT");
+        ESP_LOGI(TAG, "%s : %s: up-EXIT", getRoom(), getDir());
         return 0;
 
     case TIMEOUT_EVT:
-        ESP_LOGI(TAG, "up-TIMEOUT");
+        ESP_LOGI(TAG, "%s : %s: up-TIMEOUT", getRoom(), getDir());
         STATE_TRAN(&_running);
         break;
 
@@ -161,13 +161,13 @@ Msg const *Shutter::_topHndlr(Msg const *msg)
     switch (msg->evt)
     {
     case START_EVT:
-        ESP_LOGI(TAG, "top-INIT");
+        ESP_LOGI(TAG, "%s : %s: top-INIT", getRoom(), getDir());
         return 0;
     case ENTRY_EVT:
-        ESP_LOGI(TAG, "top-ENTRY");
+        ESP_LOGI(TAG, "%s : %s: top-ENTRY", getRoom(), getDir());
         return 0;
     case EXIT_EVT:
-        ESP_LOGI(TAG, "top-EXIT");
+        ESP_LOGI(TAG, "%s : %s: top-EXIT", getRoom(), getDir());
         return 0;
     }
     return msg;
@@ -178,20 +178,24 @@ Msg const *Shutter::_runningHndlr(Msg const *msg)
     switch (msg->evt)
     {
     case START_EVT:
-        ESP_LOGI(TAG, "running-INIT");
+        ESP_LOGI(TAG, "%s : %s: running-INIT", getRoom(), getDir());
         return 0;
     case ENTRY_EVT:
-        ESP_LOGI(TAG, "running-ENTRY");
+        ESP_LOGI(TAG, "%s : %s: running-ENTRY", getRoom(), getDir());
+        _timer.in(HSM_RUN_TIME, _onTimeout);
         return 0;
     case EXIT_EVT:
-        ESP_LOGI(TAG, "running-EXIT");
+        ESP_LOGI(TAG, "%s : %s: running-EXIT", getRoom(), getDir());
         return 0;
     case SENSOR_DOWN_EVT:
-        ESP_LOGI(TAG, "running-SENSOR_DOWN_EVT");
+        ESP_LOGI(TAG, "%s : %s: running-SENSOR_DOWN_EVT", getRoom(), getDir());
         STATE_TRAN(&_stop);
         break;
     case SENSOR_UP_EVT:
-        ESP_LOGI(TAG, "running-SENSOR_UP_EVT");
+        ESP_LOGI(TAG, "%s : %s: running-SENSOR_UP_EVT", getRoom(), getDir());
+        STATE_TRAN(&_stop);
+    case TIMEOUT_EVT:
+        ESP_LOGI(TAG, "%s : %s: running-TIMEOUT_EVT", getRoom(), getDir());
         STATE_TRAN(&_stop);
         break;
     default:
