@@ -42,7 +42,7 @@ public:
 
     void startHsm();
     void processSensorEvents();
-    void processSensorDebouncing();
+    void processSensorTimeout();
     const char* getRoom(){return _room;};
     const char* getDir(){return _dir;};
 };

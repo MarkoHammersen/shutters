@@ -87,7 +87,7 @@ void loop()
 {
   bool copy_interrupt = false;
   {
-    // enter critical section in constructor of "crit_sec"
+    // enter critical section in constructor of "crit_sec", this is why we need the opening bracket above
     CriticalSection crit_sec;
     if (interrupt)
     {
@@ -99,7 +99,7 @@ void loop()
       }
       interrupt = false;
     } 
-    // leave critical section in de-constructor of "crit_sec"
+    // leave critical section in de-constructor of "crit_sec", this is why we need the closing bracket below
   }
 
   if (copy_interrupt)
@@ -113,7 +113,7 @@ void loop()
   // process timeouts
   for (Shutter i : shutters)
   {
-    i.processSensorDebouncing();
+    i.processSensorTimeout();
   }
 }
 

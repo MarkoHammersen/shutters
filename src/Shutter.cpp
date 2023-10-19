@@ -219,7 +219,7 @@ void Shutter::processSensorEvents()
     }
 }
 
-void Shutter::processSensorDebouncing()
+void Shutter::processSensorTimeout()
 {
     if(_timeout)
     {
