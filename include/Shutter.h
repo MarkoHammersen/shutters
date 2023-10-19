@@ -1,21 +1,17 @@
 #ifndef __SHUTTER_H__
 #define __SHUTTER_H__
 
-#include <string>
-using namespace std;
-
-#include <arduino-timer.h>
-#include <assert.h>
 #include "hsm.hpp"
-#include "Sensor.h"
-#include "Actuator.h"
+#include "Message.h"
+#include "PinSetup.h"
 #include "esp_log.h"
+#include "Window.h"
+
 
 class Shutter : private Hsm
 {
 protected:
-    const char* _room;
-    const char* _dir;
+    Window _window;
 
     State _top;
     State _idle;
@@ -24,8 +20,8 @@ protected:
     State _up;
     State _down;
 
-    Timer<> _timer;
-    bool _timeout;
+    PinSetup _sensor;
+    PinSetup _actuator;
 
     Msg const *_topHndlr(Msg const *msg);
     Msg const *_idleHndlr(Msg const *msg);
@@ -34,17 +30,12 @@ protected:
     Msg const *_upHndlr(Msg const *msg);
     Msg const *_downHndlr(Msg const *msg);
 
-
 public:
-    Shutter(const char* room, const char* dir, Sensor s, Actuator a);
-    Sensor sensor;
-    Actuator actuator;
-
-    void startHsm();
-    void processSensorEvents();
-    void processSensorTimeout();
-    const char* getRoom(){return _room;};
-    const char* getDir(){return _dir;};
+    Shutter(Window w, PinSetup sensor, PinSetup actuator);
+    void startHsm(){ onStart(); };
+    void processMsg(const appMessage_t *msg);
 };
+
+void initShutters();
 
 #endif // __SHUTTER_H__

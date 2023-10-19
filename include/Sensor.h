@@ -1,35 +1,59 @@
-#ifndef __SENSOR_H__
-#define __SENSOR_H__
 
-#include "MCP23017.h"
 
 class Sensor
 {
-protected:
+private:
     uint32_t _i2cAddr;
-    MCP23017Pin::Names _up;
-    MCP23017Pin::Names _down;
+    MCP23017 _mcp;
+    uint8_t _iPortA;
+    uint8_t _iPortB;
 
 public:
-    Sensor(){};
-    Sensor(uint32_t i2cAddr, MCP23017Pin::Names up, MCP23017Pin::Names down)
+    Sensor(uint8_t i2cAddr, MCP23017 mcp)
     {
         _i2cAddr = i2cAddr;
-        _up = up;
-        _down = down;
-    }
-    MCP23017Pin::Names getUp()
+        _mcp = mcp;
+        _iPortA = 0;
+        _iPortB = 0;
+    };
+    ~Sensor(){};
+
+    uint8_t getI2cAddr(){return _i2cAddr;}
+
+    uint8_t getInterruptPort(MCP23017Port port)
     {
-        return _up;
+        return port == MCP23017Port::A ? _iPortA : _iPortB;
     }
-    MCP23017Pin::Names getDown()
+
+    void clearInterruptPorts()
     {
-        return _down;
+        _iPortA = 0;
+        _iPortB = 0;
     }
-    uint32_t getI2cAddr()
+
+    void init()
     {
-        return _i2cAddr;
+    _mcp.init();
+    _mcp.portMode(MCP23017Port::A, 0b11111111); // Port A as input
+    _mcp.portMode(MCP23017Port::B, 0b11111111); // Port B as input
+
+    _mcp.interruptMode(MCP23017InterruptMode::Separated);
+    _mcp.interrupt(MCP23017Port::A, FALLING);
+    _mcp.interrupt(MCP23017Port::B, FALLING);
+
+    _mcp.writeRegister(MCP23017Register::IPOL_A, 0x00);
+    _mcp.writeRegister(MCP23017Register::IPOL_B, 0x00);
+
+    _mcp.writeRegister(MCP23017Register::GPIO_A, 0x00);
+    _mcp.writeRegister(MCP23017Register::GPIO_B, 0x00);
+
+    _mcp.clearInterrupts();
+    }
+
+    void interruptedBy()
+    {
+        _mcp.interruptedBy(_iPortA, _iPortB);
     }
 };
 
-#endif // __SENSOR_H__
+void initSensors(void);
