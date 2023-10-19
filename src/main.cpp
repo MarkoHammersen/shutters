@@ -1,16 +1,9 @@
 #include <Arduino.h>
-#include <stdio.h>
-#include <assert.h>
-#include <stdint.h>
-#include <string>
-#include <vector>
+#include <Wire.h>
 
-#include "esp_log.h"
-#include "hsm.hpp"
-#include "Message.h"
-#include "Actuator.h"
-#include "Sensor.h"
-#include "Shutter.h"
+extern void initShutters();
+extern void initActuators();  
+extern void initSensors();
 
 void setup()
 {

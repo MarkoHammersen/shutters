@@ -8,8 +8,8 @@
 static TaskHandle_t xHandleSensors = NULL;
 volatile bool interrupt = false;
 static std::vector<Sensor> sensors = {
-    Sensor(I2C_ADDR_SENSOR_U18, MCP23017(I2C_ADDR_SENSOR_U18)),
-    Sensor(I2C_ADDR_SENSOR_U35, MCP23017(I2C_ADDR_SENSOR_U35))};
+    Sensor(I2C_ADDR_SENSOR_U18),
+    Sensor(I2C_ADDR_SENSOR_U35)};
 
 static void sensorInterrupt()
 {

@@ -1,14 +1,6 @@
 #ifndef __SHUTTER_H__
 #define __SHUTTER_H__
 
-#include <arduino-timer.h>
-#include "hsm.hpp"
-#include "Message.h"
-#include "PinSetup.h"
-#include "esp_log.h"
-#include "Window.h"
-
-
 class Shutter : private Hsm
 {
 protected:
@@ -38,7 +30,5 @@ public:
     void startHsm(){ onStart(); };
     void processMsg(const appMessage_t *msg);
 };
-
-void initShutters();
 
 #endif // __SHUTTER_H__

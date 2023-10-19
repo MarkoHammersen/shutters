@@ -1,4 +1,5 @@
-
+#ifndef __SENSOR_H_
+#define __SENSOR_H_
 
 class Sensor
 {
@@ -9,10 +10,10 @@ private:
     uint8_t _iPortB;
 
 public:
-    Sensor(uint8_t i2cAddr, MCP23017 mcp)
+    Sensor(uint8_t i2cAddr)
     {
+        _mcp = MCP23017(i2cAddr);
         _i2cAddr = i2cAddr;
-        _mcp = mcp;
         _iPortA = 0;
         _iPortB = 0;
     };
@@ -56,4 +57,4 @@ public:
     }
 };
 
-void initSensors(void);
+#endif // __SENSOR_H_

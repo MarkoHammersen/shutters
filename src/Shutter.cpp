@@ -1,8 +1,11 @@
 #include <Arduino.h>
 #include <arduino-timer.h>
 #include <vector>
-#include "MCP23017.h"
+#include "esp_log.h"
 #include "Message.h"
+#include "PinSetup.h"
+#include "Window.h"
+#include "hsm.hpp"
 #include "Shutter.h"
 
 typedef enum HsmEvents

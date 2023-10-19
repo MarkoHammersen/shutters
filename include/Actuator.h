@@ -1,8 +1,6 @@
 #ifndef __ACTUATOR_H__
 #define __ACTUATOR_H__
 
-#include "MCP23017.h"
-
 class Actuator
 {
 private:
@@ -57,7 +55,5 @@ public:
         }
     }
 };
-
-void initActuators();
 
 #endif // __ACTUATOR_H__
