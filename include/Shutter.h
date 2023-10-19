@@ -14,8 +14,8 @@ using namespace std;
 class Shutter : private Hsm
 {
 protected:
-    string _room;
-    string _dir;
+    const char* _room;
+    const char* _dir;
 
     State _top;
     State _idle;
@@ -36,15 +36,15 @@ protected:
 
 
 public:
-    Shutter(string room, string dir, Sensor s, Actuator a);
+    Shutter(const char* room, const char* dir, Sensor s, Actuator a);
     Sensor sensor;
     Actuator actuator;
 
     void startHsm();
     void processSensorEvents();
     void processSensorDebouncing();
-    string getRoom(){return _room;};
-    string getDir(){return _dir;};
+    const char* getRoom(){return _room;};
+    const char* getDir(){return _dir;};
 };
 
 #endif // __SHUTTER_H__

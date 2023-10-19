@@ -36,6 +36,7 @@
 #define SENSOR_U35_INTA  63
 #define SENSOR_U35_INTB  64
 #define HSM_DEBOUNCE_TIME  500
+#define HSM_RUN_TIME 20000
 
 #define digitalPinToInterrupt(p)    (((p)<40)?(p):-1)
 

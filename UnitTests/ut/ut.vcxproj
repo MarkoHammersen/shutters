@@ -42,7 +42,7 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>./.;C:\Users\mhammer3\Documents\Kunden\mine\shutters\shutters\UnitTests\ut\stubs;C:\Users\mhammer3\Documents\Kunden\mine\shutters\shutters\.pio\libdeps\esp32-target\MCP23017\src;C:\Users\mhammer3\Documents\Kunden\mine\shutters\shutters\.pio\libdeps\esp32-target\cpp-State-Oriented-Programming;C:\Users\mhammer3\Documents\Kunden\mine\shutters\shutters\.pio\libdeps\esp32-target\arduino-timer\src;C:\Users\mhammer3\Documents\Kunden\mine\shutters\shutters\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\mhammer3\Documents\Kunden\mine\shutters\shutters\.pio\libdeps\esp32-target\107-Arduino-CriticalSection\src;./.;C:\Users\mhammer3\Documents\Kunden\mine\shutters\shutters\UnitTests\ut\stubs;C:\Users\mhammer3\Documents\Kunden\mine\shutters\shutters\.pio\libdeps\esp32-target\MCP23017\src;C:\Users\mhammer3\Documents\Kunden\mine\shutters\shutters\.pio\libdeps\esp32-target\cpp-State-Oriented-Programming;C:\Users\mhammer3\Documents\Kunden\mine\shutters\shutters\.pio\libdeps\esp32-target\arduino-timer\src;C:\Users\mhammer3\Documents\Kunden\mine\shutters\shutters\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

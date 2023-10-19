@@ -1,5 +1,7 @@
 #include <Wire.h>
 #include "gtest/gtest.h"
+#include <Arduino.h>
+#include <107-Arduino-CriticalSection.h>
 
 unsigned long millis()
 {
@@ -16,15 +18,8 @@ void attachInterrupt(uint8_t pin, void *intRoutine, int mode)
 
 }
 
-void noInterrupts()
-{
-
-}
-
-void interrupts()
-{
-
-}
+void crit_sec_enter() {}
+void crit_sec_leave() {}
 
 TwoWire Wire = TwoWire(0);
 
