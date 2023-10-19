@@ -50,7 +50,7 @@ static void sensorInterrupt()
   // enter critical section in constructor of "crit_sec"
   CriticalSection crit_sec;
   interrupt = true;
-  // exit critical section in de-constructor of "crit_sec"
+  // leave critical section in de-constructor of "crit_sec"
 }
 
 void setup()
@@ -99,7 +99,7 @@ void loop()
       }
       interrupt = false;
     } 
-    // exit critical section in de-constructor of "crit_sec"
+    // leave critical section in de-constructor of "crit_sec"
   }
 
   if (copy_interrupt)
