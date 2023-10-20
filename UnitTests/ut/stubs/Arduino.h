@@ -53,14 +53,11 @@
 #define bitWrite(value, bit, bitvalue) ((bitvalue) ? bitSet(value, bit) : bitClear(value, bit))
 
 typedef uint8_t* QueueHandle_t;
+typedef void* TaskHandle_t;
 #define portMAX_DELAY 0
+#define xTaskCreate(...)
 
 void xQueueSend(QueueHandle_t handle, void* msg, uint32_t delay);
 uint32_t xQueueReceive(QueueHandle_t handle, void* msg, uint32_t delay);
 QueueHandle_t xQueueCreate(uint32_t count, size_t size);
-
-#define configASSERT assert
-
 unsigned long millis();
-void pinMode(uint8_t pin, uint8_t mode);
-void attachInterrupt(uint8_t pin, void* intRoutine, int mode);

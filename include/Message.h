@@ -3,6 +3,7 @@
 
 typedef enum 
 {
+    NONE,
     RUN,
     TIMEOUT,
     STOP,
@@ -12,7 +13,7 @@ typedef struct
 { 
     appEvent_t evt;
     uint8_t i2cAddr;
-    uint8_t data;
+    int data;
 }appMessage_t;
 
 extern QueueHandle_t qHandleActuators;
