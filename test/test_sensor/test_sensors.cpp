@@ -8,7 +8,7 @@ QueueHandle_t qHandleShutters = NULL;
 
 void tearDown(void)
 {
-  // clean stuff up here
+  
 }
 
 void test_dummy(void)
