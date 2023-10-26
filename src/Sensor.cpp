@@ -13,7 +13,7 @@ static std::vector<Sensor> sensors = {
 
 static void sensorInterrupt()
 {
-BaseType_t xHigherPriorityTaskWoken;
+    BaseType_t xHigherPriorityTaskWoken;
 
     /* Clear the interrupt. */
     prvClearInterruptSource();
@@ -30,12 +30,12 @@ BaseType_t xHigherPriorityTaskWoken;
     is the task's handle, which was obtained when the task was
     created.  vTaskNotifyGiveFromISR() also increments
     the receiving task's notification value. */
-    vTaskNotifyGiveFromISR( xHandleSensors, &xHigherPriorityTaskWoken );
+    vTaskNotifyGiveFromISR(xHandleSensors, &xHigherPriorityTaskWoken);
 
     /* Force a context switch if xHigherPriorityTaskWoken is now
     set to pdTRUE. The macro used to do this is dependent on
     the port and may be called portEND_SWITCHING_ISR. */
-    portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 static void vTaskSensor(void *arg)
@@ -67,7 +67,7 @@ static void vTaskSensor(void *arg)
         value is only decremented and not cleared to zero, and one
         deferred interrupt event is processed at a time.  See
         example 2 below for a more pragmatic approach. */
-        (void)ulTaskNotifyTake( pdFALSE, portMAX_DELAY );
+        (void)ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
         {
             // enter critical section in constructor of "crit_sec", this is why we need the opening bracket above
             CriticalSection crit_sec;
