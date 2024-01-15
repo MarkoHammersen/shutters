@@ -27,6 +27,7 @@ protected:
 public:
     Shutter(Window w, PinSetup sensor, PinSetup actuator);
     void startHsm(){ onStart(); };
+    char const* getCurrName() { return getName(); };
     void processMsg(const appMessage_t *msg);
     PinSetup getSensor(){return _sensor;}
     PinSetup getActuator(){return _actuator;}

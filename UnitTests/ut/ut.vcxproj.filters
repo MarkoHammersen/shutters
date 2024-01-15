@@ -4,7 +4,6 @@
     <ClCompile Include="..\..\.pio\libdeps\esp32-target\cpp-State-Oriented-Programming\hsm.cpp" />
     <ClCompile Include="..\..\src\Shutter.cpp" />
     <ClCompile Include="test_shutters.cpp" />
-    <ClCompile Include="..\..\src\Sensor.cpp" />
     <ClCompile Include="..\..\.pio\libdeps\esp32-target\MCP23017\src\MCP23017.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -18,6 +17,7 @@
       <Filter>stubs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\Shutter.h" />
+    <ClInclude Include="..\..\.pio\libdeps\esp32-target\cpp-State-Oriented-Programming\hsm.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

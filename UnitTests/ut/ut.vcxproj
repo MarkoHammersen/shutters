@@ -97,6 +97,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\.pio\libdeps\esp32-target\cpp-State-Oriented-Programming\hsm.hpp" />
     <ClInclude Include="..\..\include\Shutter.h" />
     <ClInclude Include="stubs\Arduino.h" />
     <ClInclude Include="stubs\esp_log.h" />

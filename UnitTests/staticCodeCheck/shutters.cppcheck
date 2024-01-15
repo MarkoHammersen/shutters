@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="1">
+    <builddir>shutters-cppcheck-build-dir</builddir>
+    <platform>win32A</platform>
+    <analyze-all-vs-configs>false</analyze-all-vs-configs>
+    <check-headers>true</check-headers>
+    <check-unused-templates>true</check-unused-templates>
+    <max-ctu-depth>2</max-ctu-depth>
+    <max-template-recursion>100</max-template-recursion>
+    <includedir>
+        <dir name="C:/Users/mhammer3/Documents/Kunden/mine/shutters/shutters/src/"/>
+        <dir name="C:/Users/mhammer3/Documents/Kunden/mine/shutters/shutters/.pio/libdeps/esp32-target/107-Arduino-CriticalSection/src;"/>
+        <dir name="./.;"/>
+        <dir name="C:/Users/mhammer3/Documents/Kunden/mine/shutters/shutters/UnitTests/ut/stubs;"/>
+        <dir name="C:/Users/mhammer3/Documents/Kunden/mine/shutters/shutters/.pio/libdeps/esp32-target/MCP23017/src;"/>
+        <dir name="C:/Users/mhammer3/Documents/Kunden/mine/shutters/shutters/.pio/libdeps/esp32-target/cpp-State-Oriented-Programming;"/>
+        <dir name="C:/Users/mhammer3/Documents/Kunden/mine/shutters/shutters/.pio/libdeps/esp32-target/arduino-timer/src;"/>
+        <dir name="C:/Users/mhammer3/Documents/Kunden/mine/shutters/shutters/include;"/>
+    </includedir>
+    <paths>
+        <dir name="C:/Users/mhammer3/Documents/Kunden/mine/shutters/shutters"/>
+        <dir name="C:/Users/mhammer3/Documents/Kunden/mine/shutters/shutters/.pio/libdeps/esp32-target/cpp-State-Oriented-Programming"/>
+        <dir name="C:/Users/mhammer3/Documents/Kunden/mine/shutters/shutters/.pio/libdeps/esp32-target/MCP23017/src"/>
+    </paths>
+    <safe-checks>
+        <class-public/>
+    </safe-checks>
+    <project-name>shutters</project-name>
+</project>
