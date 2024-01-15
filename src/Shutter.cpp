@@ -29,19 +29,18 @@ typedef enum HsmEvents
 QueueHandle_t qHandleShutters = NULL;
 static Shutter shutters[] =
 {
-//        /*           Name	            Input				                                                      Output
-//                  Name              (I2C MSP23017	        Up	                Down)	                        (I2C MSP23017	          Up	                Down) */
-  Shutter(Window::LI_EAST, PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPB0, MCP23017Pin::GPB1), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0))
-//        // Shutter("Li", "South",     Sensor(Port("U36",  "B2"), Port("U36",  "B3")), Actuator(Port("U4",  "A4"), Port("A4", "A3"))),
-//        // Shutter("Hall", "South",     Sensor(Port("U36",  "B4"), Port("U36",  "B5")), Actuator(Port("U4",  "A2"), Port("A2", "A1"))),
-//        // Shutter("Laundry", "South",  Sensor(Port("U36",  "B6"), Port("U36",  "B7")), Actuator(Port("U4",  "A0"), Port("A0", "B6"))),
-//        // Shutter("Bath", "South",      Sensor(Port("U36",  "A3"), Port("U36",  "A2")), Actuator(Port("U4",  "A0"), Port("B5", "B4"))),
-//        // Shutter("Bath", "North",      Sensor(Port("U36",  "A1"), Port("U36",  "A0")), Actuator(Port("U4",  "B5"), Port("B3", "B2"))),
-//        // Shutter("Ju", "West",    Sensor(Port("U1",   "B0"), Port("U1",   "B1")), Actuator(Port("U4",  "B3"), Port("B1", "B0"))),
-//        // Shutter("Ju", "North",    Sensor(Port("U1",   "B2"), Port("U1",   "B3")), Actuator(Port("U37", "B1"), Port("A6", "A5"))),
-//        // Shutter("Pa", "North",     Sensor(Port("U1",   "B4"), Port("U1",   "B5")), Actuator(Port("U37", "B1"), Port("A4", "A3"))),
-//        // Shutter("Pa", "East",      Sensor(Port("U1",   "B6"), Port("U1",   "B7")), Actuator(Port("U37", "B1"), Port("A2", "A1"))),
-//        // Shutter("Office", "East",     Sensor(Port("U1",   "A7"), Port("U1",   "A6")), Actuator(Port("U37", "B1"), Port("B6", "B5")))
+//        Name              (I2C MSP23017	        Up	                Down)	                        (I2C MSP23017	          Up	                Down) */
+  Shutter(Window::LI_EAST, PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPB0, MCP23017Pin::GPB1), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+  Shutter(Window::LI_SOUTH, PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPB2, MCP23017Pin::GPB3), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+  Shutter(Window::OFFICE, PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPB4, MCP23017Pin::GPB5), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+  Shutter(Window::PA_EAST, PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPB6, MCP23017Pin::GPB7), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+  Shutter(Window::PA_NORTH, PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPA0, MCP23017Pin::GPA1), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+  Shutter(Window::JU_NORTH, PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPA2, MCP23017Pin::GPA3), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+  Shutter(Window::JU_WEST, PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPA4, MCP23017Pin::GPA5), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+  Shutter(Window::BATH_NORTHWEST, PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPA6, MCP23017Pin::GPA7), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+  Shutter(Window::BATH_SOUTHWEST, PinSetup(I2C_ADDR_SENSOR_U2, MCP23017Pin::GPB0, MCP23017Pin::GPB1), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+  Shutter(Window::LAUNDRY, PinSetup(I2C_ADDR_SENSOR_U2, MCP23017Pin::GPB2, MCP23017Pin::GPB3), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
+  Shutter(Window::HALL, PinSetup(I2C_ADDR_SENSOR_U2, MCP23017Pin::GPB4, MCP23017Pin::GPB5), PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB0)),
 };
 
 static bool _onTimeout(void *arg)

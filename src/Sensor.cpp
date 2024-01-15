@@ -9,15 +9,12 @@ static TaskHandle_t xHandleSensors = NULL;
 volatile bool interrupt = false;
 static std::vector<Sensor> sensors = {
     Sensor(I2C_ADDR_SENSOR_U18),
-    Sensor(I2C_ADDR_SENSOR_U35)
+    Sensor(I2C_ADDR_SENSOR_U2)
 };
 
 static void sensorInterrupt()
 {
     BaseType_t xHigherPriorityTaskWoken;
-
-    /* Clear the interrupt. */
-    prvClearInterruptSource();
 
     /* xHigherPriorityTaskWoken must be initialised to pdFALSE.
     If calling vTaskNotifyGiveFromISR() unblocks the handling
