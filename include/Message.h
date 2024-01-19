@@ -9,6 +9,8 @@ typedef enum
     STOP,
 }appEvent_t;
 
+#define SENSOR_TOUCH_EVT (TIMEOUT) // using TIMEOUT here: a shutter internal TIMEOUT is an event which has to be in the same way a sensor touch
+
 typedef struct
 { 
     appEvent_t evt;

@@ -13,10 +13,10 @@ private:
 
 public:
     ~Actuator() {}
-    Actuator(uint32_t i2cAddr)
+    Actuator(uint32_t i2cAddr, TwoWire& bus)
     {
         _i2cAddr = i2cAddr;
-        _mcp = MCP23017(_i2cAddr);
+        _mcp = MCP23017(_i2cAddr, bus);
     }
 
     void init()

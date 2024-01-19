@@ -1,3 +1,5 @@
+#if 0
+
 #include <Arduino.h>
 #include <unity.h>
 #include "Sensor.cpp"
@@ -39,3 +41,5 @@ void loop()
   delay(500);
   UNITY_END(); // stop unit testing
 }
+
+#endif

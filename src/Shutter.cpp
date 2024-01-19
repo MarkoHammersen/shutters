@@ -322,7 +322,7 @@ static void vTaskShutter(void* arg)
 {
   appMessage_t msg;
   qHandleShutters = xQueueCreate(32, sizeof(msg));
-
+  ESP_LOGI("Shutter", "task ENTRY");
   for (size_t i = 0; i < sizeof(shutters) / sizeof(*shutters); i++)
   {
     shutters[i].startHsm();
@@ -343,7 +343,7 @@ static void vTaskShutter(void* arg)
 void initShutters()
 {
   TaskHandle_t xHandleShutters = NULL;
-  xTaskCreate(vTaskShutter, "shutter", 4096, NULL, 10, &xHandleShutters);
+  assert(pdPASS == xTaskCreate(vTaskShutter, "shutter", 4096, NULL, 10, &xHandleShutters));
 }
 
 #ifdef UNIT_TEST

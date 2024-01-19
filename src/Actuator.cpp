@@ -7,13 +7,14 @@
 QueueHandle_t qHandleActuators = NULL;
 
 static std::vector<Actuator> actuators = {
-    Actuator(I2C_ADDR_ACTUATOR_U36),
-    Actuator(I2C_ADDR_ACTUATOR_U37)
+    Actuator(I2C_ADDR_ACTUATOR_U36, Wire),
+    Actuator(I2C_ADDR_ACTUATOR_U37, Wire)
 };
 
 static void vTaskActuator(void *arg)
 {
     appMessage_t msg;
+    ESP_LOGI("Actuator", "task ENTRY");
     qHandleActuators = xQueueCreate(32, sizeof(msg));
     configASSERT(qHandleActuators != NULL);
 
