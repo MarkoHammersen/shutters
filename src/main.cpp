@@ -5,7 +5,7 @@
 #if 1
 extern void initShutters();
 extern void initActuators();  
-extern void initSensors();
+extern void initSensorTask();
 
 void setup()
 {
@@ -14,7 +14,7 @@ void setup()
 //  initActuators();  
   delay(20); // allow actuators some time to turn off all outputs
   //initShutters();  
-  initSensors();
+  initSensorTask();
   ESP_LOGI("main", "setup EXITY");
 }
 

@@ -6,76 +6,53 @@ class Sensor
 private:
     uint32_t _i2cAddr;
     MCP23017 _mcp;
-    uint8_t _iPortA, _iPortB;
-    Timer<> _timer;
     const char *_name;
-    volatile bool _interrupted;
+    uint8_t _pinIntPortA, _pinIntPortB;
+    uint16_t _prevGpioAB;
 
 public:
-    Sensor(const char *name, uint8_t i2cAddr, TwoWire &bus)
+    Sensor(const char *name, uint8_t i2cAddr, uint8_t pinIntPortA, uint8_t pinIntPortB, TwoWire &bus)
     {
         _name = name;
         _mcp = MCP23017(i2cAddr, bus);
         _i2cAddr = i2cAddr;
-        _iPortA = 0;
-        _iPortB = 0;
-        _interrupted = false;
-        _timer = timer_create_default();
+        _pinIntPortA = pinIntPortA;
+        _pinIntPortB = pinIntPortB;
+        _prevGpioAB = 0;
     };
     ~Sensor(){};
 
-    uint8_t getI2cAddr() { return _i2cAddr; }
-    const char *getName() { return _name; }
-    void interruptCallback(void){ _interrupted = true;}
-    void startTimer(Timer<>::handler_t h)
+    uint8_t getI2cAddr()
     {
-        _timer.in(MCP23017_INTERRUPT_DEBOUNCE_TIME, h, NULL);
+        return _i2cAddr;
     }
 
-    bool isInterrupted()
-    { 
-        if(_interrupted)
+    const char *getName()
+    {
+        return _name;
+    }
+
+    uint8_t getPinIntPort(MCP23017Port port)
+    {
+        return port == MCP23017Port::A ? _pinIntPortA: _pinIntPortB;
+    }
+
+    uint16_t getGpioAB(uint16_t *gpioAB)
+    {
+        _mcp.clearInterrupts();
+        uint16_t val = _mcp.read();
+        
+        val = (0xFFFF - val) & 0x7f7f;
+        if (val != _prevGpioAB)
         {
-            _interrupted = false;
-
-            _iPortA = 0;
-            _iPortB = 0;
-            _mcp.interruptedBy(_iPortA, _iPortB);
-
-            if(_iPortA > 0)
-            {
-                // clear interrupts
-                _mcp.readRegister(MCP23017Register::INTCAP_A);
-                // we need to read GPIOAB to clear the interrupt actually.
-                _mcp.readPort(MCP23017Port::A);
-            }
-
-            if(_iPortB > 0)
-            {
-                // clear interrupts
-                _mcp.readRegister(MCP23017Register::INTCAP_B);
-                // we need to read GPIOAB to clear the interrupt actually.
-                _mcp.readPort(MCP23017Port::B);
-            }
+            _prevGpioAB = val;
+            *gpioAB = val;
 
             return true;
         }
-        return false;
-    }
 
-    uint8_t getInterruptPort(MCP23017Port port)
-    {
-        return port == MCP23017Port::A ? _iPortA : _iPortB;
-    }
-
-    void clearInterrupts()
-    {
-        _mcp.clearInterrupts();
-    }
-
-    uint8_t read()
-    {
-        return _mcp.read();
+        *gpioAB = 0;
+        return false; // no change
     }
 
     void init()
@@ -87,11 +64,11 @@ public:
         // see: https://microchip.my.site.com/s/article/GPA7---GPB7-Cannot-Be-Used-as-Inputs-In-MCP23017
         _mcp.portMode(MCP23017Port::A, 0b01111111); // Port A as input
         _mcp.portMode(MCP23017Port::B, 0b01111111); // Port B as input
-        
+
         _mcp.interruptMode(MCP23017InterruptMode::Separated);
         _mcp.interrupt(MCP23017Port::A, FALLING);
         _mcp.interrupt(MCP23017Port::B, FALLING);
-        
+
         _mcp.writeRegister(MCP23017Register::IPOL_A, 0x00);
         _mcp.writeRegister(MCP23017Register::IPOL_B, 0x00);
         // reset:
@@ -99,13 +76,6 @@ public:
         _mcp.writeRegister(MCP23017Register::GPIO_B, 0x00);
 
         _mcp.clearInterrupts();
-    }
-
-    void interruptedBy()
-    {
-        _iPortA = 0;
-        _iPortB = 0;
-        _mcp.interruptedBy(_iPortA, _iPortB);
     }
 };
 
