@@ -6,10 +6,9 @@
 
 QueueHandle_t qHandleActuators = NULL;
 
-static std::vector<Actuator> actuators = {
+static std::vector<Actuator> vActuators = {
     Actuator(I2C_ADDR_ACTUATOR_U36, Wire),
-    Actuator(I2C_ADDR_ACTUATOR_U37, Wire)
-};
+    Actuator(I2C_ADDR_ACTUATOR_U37, Wire)};
 
 static void vTaskActuator(void *arg)
 {
@@ -18,9 +17,9 @@ static void vTaskActuator(void *arg)
     qHandleActuators = xQueueCreate(32, sizeof(msg));
     configASSERT(qHandleActuators != NULL);
 
-    for (Actuator a : actuators)
+    for (uint32_t i = 0; i < vActuators.size(); i++)
     {
-        a.init();
+        vActuators[i].init();
     }
 
     while (1)
@@ -28,17 +27,18 @@ static void vTaskActuator(void *arg)
         memset(&msg, 0, sizeof(msg));
         if (pdTRUE == xQueueReceive(qHandleActuators, &msg, portMAX_DELAY))
         {
-            for (Actuator i : actuators)
+            log_i("%02d, %d, %d", msg.i2cAddr, msg.evt, msg.data);
+            for (uint32_t i = 0; i < vActuators.size(); i++)
             {
-                i.processMsg(&msg);
+                vActuators[i].processMsg(&msg);
             }
         }
     }
 }
 
-void initActuators(void)
+void initActuatorTask(void)
 {
     static TaskHandle_t xHandleActuators = NULL;
-    xTaskCreate(vTaskActuator, "shutter", 4096, NULL, 10, &xHandleActuators);
+    xTaskCreate(vTaskActuator, "actuator", 4096, NULL, 10, &xHandleActuators);
     configASSERT(xHandleActuators != NULL);
 }
