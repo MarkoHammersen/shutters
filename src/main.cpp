@@ -4,7 +4,7 @@
 #include "Message.h"
 #include "MCP23017.h"
 
-extern void initShutters();
+extern void initShutterTask();
 extern void initActuatorTask();
 extern void initSensorTask();
 
@@ -14,8 +14,9 @@ void setup()
   Wire.begin(I2C_SDA, I2C_SCL, I2C_FRQ);
   initActuatorTask();
   delay(20); // allow actuators some time to turn off all outputs
-  // initShutters();
-  // initSensorTask();
+  initShutterTask();
+  initSensorTask();
+  
   ESP_LOGI("main", "setup EXITY");
 }
 

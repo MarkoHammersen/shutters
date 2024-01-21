@@ -7,22 +7,22 @@ class PinSetup
 {
 protected:
     uint8_t _i2cAddr;
-    int _up;
-    int _down;
+    uint16_t _up;
+    uint16_t _down;
 
 public:
     PinSetup(){};
-    PinSetup(uint32_t i2cAddr, int up, int down)
+    PinSetup(uint32_t i2cAddr, uint16_t up, uint16_t down)
     {
         _i2cAddr = i2cAddr;
         _up = up;
         _down = down;
     }
-    int getUp()
+    uint16_t getUp()
     {
         return _up;
     }
-    int getDown()
+    uint16_t getDown()
     {
         return _down;
     }

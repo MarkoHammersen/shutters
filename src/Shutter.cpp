@@ -75,12 +75,12 @@ static bool _onTimeout(void* arg)
 }
 
 Shutter::Shutter(Window window, PinSetup sensor, PinSetup actuator)
-  : Hsm("shutter", (EvtHndlr)&Shutter::topHndlr),
-  _idle("idle", &top, (EvtHndlr)&Shutter::idleHndlr),
-  _stop("stop", &top, (EvtHndlr)&Shutter::stopHndlr),
-  _running("running", &top, (EvtHndlr)&Shutter::runningHndlr),
-  _up("up", &top, (EvtHndlr)&Shutter::upHndlr),
-  _down("down", &top, (EvtHndlr)&Shutter::downHndlr)
+  : Hsm("shutter", static_cast<EvtHndlr>(&Shutter::topHndlr)),
+  _idle("idle", &top, static_cast<EvtHndlr>(&Shutter::idleHndlr)),
+  _stop("stop", &top, static_cast<EvtHndlr>(&Shutter::stopHndlr)),
+  _running("running", &top, static_cast<EvtHndlr>(&Shutter::runningHndlr)),
+  _up("up", &top, static_cast<EvtHndlr>(&Shutter::upHndlr)),
+  _down("down", &top, static_cast<EvtHndlr>(&Shutter::downHndlr))
 {
   _window = window;
   _sensor = sensor;
@@ -290,11 +290,11 @@ void Shutter::processMsg(const appMessage_t* msg)
   case RUN:
     if (_sensor.getI2cAddr() == msg->i2cAddr)
     {
-      if (_sensor.getUp() == msg->data)
+      if ((msg->data & ((uint16_t)1 << (_sensor.getUp()))) > 0)
       {
         onEvent(&hsmMsgs[SENSOR_UP_EVT]);
       }
-      else if (_sensor.getDown() == msg->data)
+      else if ((msg->data & ((uint16_t)1 << (_sensor.getDown()))) > 0)
       {
         onEvent(&hsmMsgs[SENSOR_DOWN_EVT]);
       }
@@ -340,7 +340,7 @@ static void vTaskShutter(void* arg)
   }
 }
 
-void initShutters()
+void initShutterTask()
 {
   TaskHandle_t xHandleShutters = NULL;
   assert(pdPASS == xTaskCreate(vTaskShutter, "shutter", 4096, NULL, 10, &xHandleShutters));
