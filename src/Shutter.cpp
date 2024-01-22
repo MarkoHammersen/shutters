@@ -31,11 +31,11 @@ typedef enum HsmEvents
 QueueHandle_t qHandleShutters = NULL;
 
 static Shutter shutters[static_cast<uint8_t>(Window::Count)] = {
-    Shutter(Window::HALL, 12000,
+    Shutter(Window::HALL, 120000,
             PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPB0, MCP23017Pin::GPB1),    // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB1)), // actuator
 
-    Shutter(Window::LAUNDRY, 12000,
+    Shutter(Window::LAUNDRY, 120000,
             PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPB2, MCP23017Pin::GPB3),    // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB2, MCP23017Pin::GPB3)), // actuator
 
@@ -53,7 +53,7 @@ static Shutter shutters[static_cast<uint8_t>(Window::Count)] = {
 
     Shutter(Window::JU_NORTH, 12000,
             PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPA4, MCP23017Pin::GPA5),    // sensor
-            PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB1)), // actuator
+            PinSetup(I2C_ADDR_ACTUATOR_U37, MCP23017Pin::GPB0, MCP23017Pin::GPB1)), // actuator
 
     Shutter(Window::PA_NORTH, 12000,
             PinSetup(I2C_ADDR_SENSOR_U2, MCP23017Pin::GPB0, MCP23017Pin::GPB1),     // sensor
@@ -76,22 +76,38 @@ static Shutter shutters[static_cast<uint8_t>(Window::Count)] = {
             PinSetup(I2C_ADDR_ACTUATOR_U37, MCP23017Pin::GPA5, MCP23017Pin::GPA4)), // actuator
 };
 
+static void sendToActuator(appMessage_t *msg)
+{
+  xQueueSend(qHandleActuators, msg, portMAX_DELAY);
+}
+
+static void startTimer(TimerHandle_t h, uint32_t timeout_ms)
+{
+  if (xTimerIsTimerActive(h) != pdFALSE)
+  {
+    // xTimer is already active - stop it.
+    xTimerStop(h, portMAX_DELAY);
+  }
+  assert(pdPASS == xTimerChangePeriod(h, timeout_ms / portTICK_PERIOD_MS, portMAX_DELAY) == pdPASS);
+  assert(pdPASS == xTimerStart(h, portMAX_DELAY) == pdPASS);
+}
+
 static void onTimeout(TimerHandle_t xTimer)
 {
   /* (uint8_t)arg is the shutter window */
   appMessage_t msg;
   msg.evt = AppEvents::TIMEOUT;
-  
+
   uint32_t i = 0;
-  for(i = 0; i < static_cast<uint8_t>(Window::Count); i++)
+  for (i = 0; i < static_cast<uint8_t>(Window::Count); i++)
   {
-    if(shutters[i].getTimerHandle() == xTimer)
+    if (shutters[i].getTimerHandle() == xTimer)
     {
       msg.data = static_cast<uint16_t>(shutters[i].getWindow());
       break;
     }
   }
-  if(i >= static_cast<uint8_t>(Window::Count))
+  if (i >= static_cast<uint8_t>(Window::Count))
   {
     log_e("xTimer invalid");
     return;
@@ -138,18 +154,11 @@ Msg const *Shutter::downHndlr(Msg const *msg)
     msg.i2cAddr = _actuator.getI2cAddr();
     msg.evt = AppEvents::STOP;
     msg.data = _actuator.getUp();
-    xQueueSend(qHandleActuators, &msg, portMAX_DELAY);
+    sendToActuator(&msg);
     msg.evt = AppEvents::RUN;
     msg.data = _actuator.getDown();
-    xQueueSend(qHandleActuators, &msg, portMAX_DELAY);
-
-    if (xTimerIsTimerActive(_timer) != pdFALSE)
-    {
-      // xTimer is already active - delete it.
-      xTimerDelete(_timer, portMAX_DELAY);
-    }
-    assert(pdPASS == xTimerChangePeriod(_timer, HSM_DEBOUNCE_TIME / portTICK_PERIOD_MS, portMAX_DELAY) == pdPASS);
-    assert(pdPASS == xTimerStart(_timer, portMAX_DELAY) == pdPASS);
+    sendToActuator(&msg);
+    startTimer(_timer, HSM_DEBOUNCE_TIME);
   }
     return 0;
 
@@ -185,17 +194,11 @@ Msg const *Shutter::stopHndlr(Msg const *msg)
     msg.i2cAddr = _actuator.getI2cAddr();
     msg.evt = AppEvents::STOP;
     msg.data = _actuator.getUp();
-    xQueueSend(qHandleActuators, &msg, portMAX_DELAY);
+    sendToActuator(&msg);
     msg.data = _actuator.getDown();
-    xQueueSend(qHandleActuators, &msg, portMAX_DELAY);
+    sendToActuator(&msg);
+    startTimer(_timer, HSM_DEBOUNCE_TIME);
 
-    if (xTimerIsTimerActive(_timer) != pdFALSE)
-    {
-      // xTimer is already active - delete it.
-      xTimerDelete(_timer, portMAX_DELAY);
-    }
-    assert(pdPASS == xTimerChangePeriod(_timer, HSM_DEBOUNCE_TIME / portTICK_PERIOD_MS, portMAX_DELAY) == pdPASS);
-    assert(pdPASS == xTimerStart(_timer, portMAX_DELAY) == pdPASS);
     return 0;
 
   case EXIT_EVT:
@@ -258,18 +261,11 @@ Msg const *Shutter::upHndlr(Msg const *msg)
     msg.i2cAddr = _actuator.getI2cAddr();
     msg.evt = AppEvents::STOP;
     msg.data = _actuator.getDown();
-    xQueueSend(qHandleActuators, &msg, portMAX_DELAY);
+    sendToActuator(&msg);
     msg.evt = AppEvents::RUN;
     msg.data = _actuator.getUp();
-    xQueueSend(qHandleActuators, &msg, portMAX_DELAY);
-
-    if (xTimerIsTimerActive(_timer) != pdFALSE)
-    {
-      // xTimer is already active - delete it.
-      xTimerDelete(_timer, portMAX_DELAY);
-    }
-    assert(pdPASS == xTimerChangePeriod(_timer, HSM_DEBOUNCE_TIME / portTICK_PERIOD_MS, portMAX_DELAY) == pdPASS);
-    assert(pdPASS == xTimerStart(_timer, portMAX_DELAY) == pdPASS);
+    sendToActuator(&msg);
+    startTimer(_timer, HSM_DEBOUNCE_TIME);
     return 0;
 
   case EXIT_EVT:
@@ -309,13 +305,7 @@ Msg const *Shutter::runningHndlr(Msg const *msg)
   case ENTRY_EVT:
   {
     SHTTR_LOG("%s: running-ENTRY", windowName[(uint8_t)_window]);
-    if (xTimerIsTimerActive(_timer) != pdFALSE)
-    {
-      // xTimer is already active - delete it.
-      xTimerDelete(_timer, portMAX_DELAY);
-    }
-    assert(pdPASS == xTimerChangePeriod(_timer, getRunTime() / portTICK_PERIOD_MS, portMAX_DELAY) == pdPASS);
-    assert(pdPASS == xTimerStart(_timer, portMAX_DELAY) == pdPASS);
+    startTimer(_timer,getRunTime());
   }
     return 0;
 
@@ -406,7 +396,7 @@ static void vTaskShutter(void *arg)
 void initShutterTask()
 {
   TaskHandle_t xHandleShutters = NULL;
-  assert(pdPASS == xTaskCreate(vTaskShutter, "shutter", 4096, NULL, 10, &xHandleShutters));
+  assert(pdPASS == xTaskCreate(vTaskShutter, "shutter", 2 * 4096, NULL, 10, &xHandleShutters));
 }
 
 #ifdef UNIT_TEST
