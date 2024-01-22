@@ -31,47 +31,47 @@ typedef enum HsmEvents
 QueueHandle_t qHandleShutters = NULL;
 
 static Shutter shutters[static_cast<uint8_t>(Window::Count)] = {
-    Shutter(Window::HALL, 120000,
+    Shutter(Window::HALL, 20000,
             PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPB0, MCP23017Pin::GPB1),    // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB0, MCP23017Pin::GPB1)), // actuator
 
-    Shutter(Window::LAUNDRY, 120000,
+    Shutter(Window::LAUNDRY, 20000,
             PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPB2, MCP23017Pin::GPB3),    // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB2, MCP23017Pin::GPB3)), // actuator
 
-    Shutter(Window::BATH_SOUTHWEST, 20000,
+    Shutter(Window::BATH_SOUTHWEST, 25000,
             PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPB4, MCP23017Pin::GPB5),    // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPB4, MCP23017Pin::GPB5)), // actuator
 
-    Shutter(Window::BATH_NORTHWEST, 12000,
+    Shutter(Window::BATH_NORTHWEST, 20000,
             PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPA0, MCP23017Pin::GPA1),    // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPA0, MCP23017Pin::GPA1)), // actuator
 
-    Shutter(Window::JU_WEST, 12000,
+    Shutter(Window::JU_WEST, 20000,
             PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPA2, MCP23017Pin::GPA3),    // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U36, MCP23017Pin::GPA2, MCP23017Pin::GPA3)), // actuator
 
-    Shutter(Window::JU_NORTH, 12000,
+    Shutter(Window::JU_NORTH, 20000,
             PinSetup(I2C_ADDR_SENSOR_U18, MCP23017Pin::GPA4, MCP23017Pin::GPA5),    // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U37, MCP23017Pin::GPB0, MCP23017Pin::GPB1)), // actuator
 
-    Shutter(Window::PA_NORTH, 12000,
+    Shutter(Window::PA_NORTH, 20000,
             PinSetup(I2C_ADDR_SENSOR_U2, MCP23017Pin::GPB0, MCP23017Pin::GPB1),     // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U37, MCP23017Pin::GPB2, MCP23017Pin::GPB3)), // actuator
 
-    Shutter(Window::PA_EAST, 12000,
+    Shutter(Window::PA_EAST, 20000,
             PinSetup(I2C_ADDR_SENSOR_U2, MCP23017Pin::GPB2, MCP23017Pin::GPB3),     // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U37, MCP23017Pin::GPA0, MCP23017Pin::GPA1)), // actuator
 
-    Shutter(Window::OFFICE, 12000,
+    Shutter(Window::OFFICE, 20000,
             PinSetup(I2C_ADDR_SENSOR_U2, MCP23017Pin::GPB4, MCP23017Pin::GPB5),     // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U37, MCP23017Pin::GPA2, MCP23017Pin::GPA3)), // actuator
 
-    Shutter(Window::LI_EAST, 12000,
+    Shutter(Window::LI_EAST, 20000,
             PinSetup(I2C_ADDR_SENSOR_U2, MCP23017Pin::GPA0, MCP23017Pin::GPA1),     // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U37, MCP23017Pin::GPA7, MCP23017Pin::GPA6)), // actuator
 
-    Shutter(Window::LI_SOUTH, 12000,
+    Shutter(Window::LI_SOUTH, 20000,
             PinSetup(I2C_ADDR_SENSOR_U2, MCP23017Pin::GPA2, MCP23017Pin::GPA3),     // sensor
             PinSetup(I2C_ADDR_ACTUATOR_U37, MCP23017Pin::GPA5, MCP23017Pin::GPA4)), // actuator
 };
