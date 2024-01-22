@@ -96,8 +96,7 @@ static void onTimeout(TimerHandle_t xTimer)
     log_e("xTimer invalid");
     return;
   }
-  
-  SHTTR_LOG("%s: timeout", windowName[msg.data]);
+
   xQueueSend(qHandleShutters, &msg, portMAX_DELAY);
 }
 
