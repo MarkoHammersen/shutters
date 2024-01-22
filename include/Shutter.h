@@ -15,7 +15,9 @@ protected:
     State _up;
     State _down;
 
-    Timer<> _timer;
+    TimerHandle_t _timer;
+    uint32_t _runTime;
+
 
     Msg const *topHndlr(Msg const *msg);
     Msg const *idleHndlr(Msg const *msg);
@@ -25,11 +27,14 @@ protected:
     Msg const *downHndlr(Msg const *msg);
 
 public:
-    Shutter(Window w, PinSetup sensor, PinSetup actuator);
+    Shutter(Window w, uint32_t runTime, PinSetup sensor, PinSetup actuator);
     void startHsm(){ onStart(); };
     void processMsg(const appMessage_t *msg);
+    uint32_t getRunTime() { return _runTime;}
     PinSetup getSensor(){return _sensor;}
     PinSetup getActuator(){return _actuator;}
+    TimerHandle_t getTimerHandle(){return _timer;}
+    Window getWindow(){return _window;}
 };
 
 #ifdef UNIT_TEST

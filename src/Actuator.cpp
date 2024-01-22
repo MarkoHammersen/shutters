@@ -27,7 +27,7 @@ static void vTaskActuator(void *arg)
         memset(&msg, 0, sizeof(msg));
         if (pdTRUE == xQueueReceive(qHandleActuators, &msg, portMAX_DELAY))
         {
-            log_i("%02d, %d, %d", msg.i2cAddr, msg.evt, msg.data);
+            log_d("%02d, %d, %d", msg.i2cAddr, msg.evt, msg.data);
             for (uint32_t i = 0; i < vActuators.size(); i++)
             {
                 vActuators[i].processMsg(&msg);

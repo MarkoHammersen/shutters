@@ -80,7 +80,7 @@ static void vTaskSensor(void *arg)
                         log_i("%s interrupt: %04x", vSensors[i].getName(), gpioAB);
                         appMessage_t msg;
                         msg.i2cAddr = vSensors[i].getI2cAddr();
-                        msg.evt = SENSOR_TOUCH_EVT;
+                        msg.evt = AppEvents::TOUCH;
                         msg.data = gpioAB;
                         xQueueSend(qHandleShutters, &msg, portMAX_DELAY);
                     }

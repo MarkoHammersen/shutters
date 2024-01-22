@@ -34,7 +34,7 @@ public:
     {
         switch (msg->evt)
         {
-        case RUN:
+        case AppEvents::RUN:
             if(_i2cAddr == msg->i2cAddr)
             {
                 _switchOn(static_cast<MCP23017Pin::Names>(msg->data));
@@ -42,7 +42,7 @@ public:
             /* code */
             break;
 
-        case STOP:
+        case AppEvents::STOP:
             if(_i2cAddr == msg->i2cAddr)
             {
                 _switchOff(static_cast<MCP23017Pin::Names>(msg->data));
