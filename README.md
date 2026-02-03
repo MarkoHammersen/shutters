@@ -1,19 +1,15 @@
 # ESP32 Shutter Control System
-
-This project implements a **robust ESP32-based shutter control system** designed for safely controlling 230 V AC shutter motors via relays, with clear separation between hardware abstraction and business logic.
-
+This project implements a **ESP32-based shutter control system** designed for controlling shutter motors via relays, with clear separation between hardware abstraction and business logic.
 The system combines **ESP32**, **Microchip MCP23017 I/O expanders**, and **ULN2003A Darlington arrays**, and is implemented in **C++ using PlatformIO with the Arduino framework**.
 
 ---
 
 ## System Overview
-
 The shutter system consists of:
 
 * An **ESP32** as the central controller
 * **MCP23017 I/O expanders** for scalable digital input and output via I²C
 * **ULN2003A Darlington transistor arrays** for driving relay coils
-* **Electromechanical relays** for switching 230 V AC shutter motors
 * A dedicated **external 5 V power supply** for stable I/O operation
 
 All safety-relevant design aspects (galvanic separation, flyback protection, low coil current) are explicitly addressed in the extern hardware design, which is not part of the schematics attached.
@@ -51,14 +47,11 @@ This approach ensures:
 
 #### Relay Driving
 
-* The switching relays are capable of controlling **230 V AC shutter motors**
 * Relay coil current is low enough to be **safely driven by ULN2003A**
 * **Flyback diodes** are mounted directly at the relay coils
 * This protects the Darlington arrays and improves EMC robustness
 
-> ⚠️ **Note:** Mains voltage (230 V AC) must only be handled by qualified personnel.
-> Refer to the schematics for correct isolation and clearance requirements.
-
+> ⚠️ **Note:** Mains voltage must only be handled by qualified personnel.
 ---
 
 ### Power Supply
@@ -133,4 +126,21 @@ This provides:
 * Safe relay driving using ULN2003A
 * Clear separation of concerns in software
 * State-machine-driven business logic
-* Suitable for real-world 230 V AC shutter applications
+
+
+⚠️ WARNING
+
+This project uses electromechanical actuators.
+Improper handling can result in serious injury, fire, or death.
+
+This project is provided for educational and experimental purposes only.
+The author assumes no liability for any damage, injury, or loss resulting
+from the use, misuse, or modification of this hardware or software.
+
+Only qualified personnel should work with mains voltage systems.
+
+---
+This project is not certified for commercial or residential use.
+No compliance with CE, VDE, UL, or any other safety standard is claimed.
+--
+Use at your own risk!
