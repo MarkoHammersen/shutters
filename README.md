@@ -73,7 +73,7 @@ The firmware is written in **C++** and built using:
 * **Arduino framework**
 * **ESP32 target**
 
-The software is cleanly structured into three main layers:
+The software is cleanly structured into three main layers using dedicated FreeRTOS tasks. The communication between these tasks are done via message queues:
 
 ### 1. Sensors
 
