@@ -127,8 +127,8 @@ This provides:
 * Clear separation of concerns in software
 * State-machine-driven business logic
 
-
-⚠️ WARNING
+---
+### ⚠️ WARNING
 
 This project uses electromechanical actuators.
 Improper handling can result in serious injury, fire, or death.
